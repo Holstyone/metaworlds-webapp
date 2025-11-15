@@ -111,6 +111,47 @@
         </div>
       </div>
 
+      <div class="inspector-card" id="dataInspectorCard">
+        <div class="inspector-header">
+          <div>
+            <div class="inspector-title">Мониторинг данных</div>
+            <div class="inspector-subtitle">
+              Посмотри, что прямо сейчас хранится локально и уходит боту
+            </div>
+          </div>
+          <button class="inspector-toggle" id="btnToggleInspector" type="button">
+            Показать
+          </button>
+        </div>
+
+        <div class="inspector-panel" id="dataInspectorPanel">
+          <div class="inspector-controls">
+            <button class="inspector-refresh" id="btnRefreshInspector" type="button">
+              🔄 Обновить снимок из хранилища
+            </button>
+            <div class="inspector-status" id="inspectorStatus"></div>
+          </div>
+
+          <div class="inspector-section">
+            <div class="inspector-label">Текущее состояние фронтенда</div>
+            <pre class="inspector-pre" id="inspectorCurrentState">—</pre>
+          </div>
+
+          <div class="inspector-section">
+            <div class="inspector-label">Последний отправленный снапшот боту</div>
+            <pre class="inspector-pre" id="inspectorLastSnapshot">—</pre>
+          </div>
+
+          <div class="inspector-section">
+            <div class="inspector-label">
+              Что лежит в хранилище
+              <span class="inspector-source" id="inspectorStorageSource">—</span>
+            </div>
+            <pre class="inspector-pre" id="inspectorStoredState">—</pre>
+          </div>
+        </div>
+      </div>
+
       <div class="spacer"></div>
       <div class="bottom-caption">
         MetaWorlds • управляй своим миром и готовься к битве.

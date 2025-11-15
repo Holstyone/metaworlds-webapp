@@ -1,6 +1,7 @@
 window.addEventListener("load", () => {
-	const STORAGE_KEY = "metaworlds_state_v1";
-	const tg = window.Telegram?.WebApp;
+  const STORAGE_KEY = "metaworlds_state_v1";
+  const tg = window.Telegram?.WebApp;
+
   if (tg) {
     tg.expand();
     tg.ready();
@@ -125,6 +126,139 @@ window.addEventListener("load", () => {
 
   const hasCloudStorage = Boolean(tg?.CloudStorage);
 
+  // ========= DATA INSPECTOR =========
+
+  let lastSyncedPayload = null;
+
+  const inspectorEls = {
+    card: document.getElementById("dataInspectorCard"),
+    toggle: document.getElementById("btnToggleInspector"),
+    refresh: document.getElementById("btnRefreshInspector"),
+    status: document.getElementById("inspectorStatus"),
+    current: document.getElementById("inspectorCurrentState"),
+    last: document.getElementById("inspectorLastSnapshot"),
+    stored: document.getElementById("inspectorStoredState"),
+    source: document.getElementById("inspectorStorageSource"),
+  };
+
+  function formatJson(value) {
+    try {
+      if (typeof value === "string") {
+        return JSON.stringify(JSON.parse(value), null, 2);
+      }
+      return JSON.stringify(value, null, 2);
+    } catch (err) {
+      return typeof value === "string" ? value : String(value);
+    }
+  }
+
+  function setInspectorStatus(text) {
+    if (inspectorEls.status) {
+      inspectorEls.status.textContent = text || "";
+    }
+  }
+
+  function updateInspectorCurrentState() {
+    if (!inspectorEls.current) return;
+    inspectorEls.current.textContent = formatJson(worldState);
+  }
+
+  function updateInspectorLastSnapshot() {
+    if (!inspectorEls.last) return;
+    if (!lastSyncedPayload) {
+      inspectorEls.last.textContent = "Снапшоты ещё не отправлялись";
+      return;
+    }
+    inspectorEls.last.textContent = formatJson(lastSyncedPayload);
+  }
+
+  function updateInspectorStoredState(raw, sourceLabel = "—") {
+    if (!inspectorEls.stored) return;
+    if (!raw) {
+      inspectorEls.stored.textContent = "Сохранённых данных пока нет";
+      if (inspectorEls.source) inspectorEls.source.textContent = "—";
+      return;
+    }
+    inspectorEls.stored.textContent = formatJson(raw);
+    if (inspectorEls.source) inspectorEls.source.textContent = sourceLabel;
+  }
+
+  async function readStoredStateSnapshot() {
+    let raw = null;
+    let source = null;
+
+    if (hasCloudStorage) {
+      try {
+        raw = await cloudGetItem(STORAGE_KEY);
+        if (raw) {
+          source = "Telegram CloudStorage";
+        }
+      } catch (err) {
+        console.warn("CloudStorage read failed", err);
+      }
+    }
+
+    if (!raw) {
+      try {
+        raw = loadFromLocalStorage();
+        if (raw) {
+          source = "localStorage";
+        }
+      } catch (err) {
+        console.warn("localStorage read failed", err);
+      }
+    }
+
+    return { raw, source };
+  }
+
+  async function refreshInspectorStorage() {
+    if (!inspectorEls.stored) return;
+    try {
+      setInspectorStatus("Обновляю…");
+      inspectorEls.refresh?.setAttribute("disabled", "disabled");
+      const { raw, source } = await readStoredStateSnapshot();
+      if (raw) {
+        updateInspectorStoredState(raw, source || "localStorage");
+      } else {
+        inspectorEls.stored.textContent = "В хранилище данных нет";
+        if (inspectorEls.source) inspectorEls.source.textContent = "—";
+      }
+    } catch (err) {
+      inspectorEls.stored.textContent = `Ошибка чтения: ${err.message || err}`;
+      if (inspectorEls.source) inspectorEls.source.textContent = "—";
+    } finally {
+      inspectorEls.refresh?.removeAttribute("disabled");
+      setInspectorStatus("");
+    }
+  }
+
+  function initInspectorControls() {
+    if (inspectorEls.toggle && inspectorEls.card) {
+      inspectorEls.toggle.addEventListener("click", () => {
+        const open = inspectorEls.card.classList.toggle("inspector-open");
+        inspectorEls.toggle.textContent = open ? "Свернуть" : "Показать";
+        if (open) {
+          updateInspectorCurrentState();
+          updateInspectorLastSnapshot();
+        }
+      });
+    }
+
+    if (inspectorEls.refresh) {
+      inspectorEls.refresh.addEventListener("click", () => {
+        refreshInspectorStorage();
+      });
+    }
+  }
+
+  initInspectorControls();
+  updateInspectorCurrentState();
+  updateInspectorLastSnapshot();
+  updateInspectorStoredState(null);
+
+  // ========= СИНК С БОТОМ / CLOUDSTORAGE =========
+
   function serializeState() {
     return JSON.parse(JSON.stringify(worldState));
   }
@@ -149,7 +283,29 @@ window.addEventListener("load", () => {
       extra: extra || null,
       timestamp: new Date().toISOString(),
     };
-    tg.sendData(JSON.stringify(payload));
+    lastSyncedPayload = payload;
+    updateInspectorLastSnapshot();
+
+    try {
+      tg.sendData(JSON.stringify(payload));
+    } catch (err) {
+      console.warn("sendData failed", err);
+    }
+  }
+
+  let botSyncTimer = null;
+  let pendingReason = null;
+
+  function scheduleStatePush(reason = "auto") {
+    if (!tg || !tg.sendData) return;
+    pendingReason = reason;
+    if (botSyncTimer) return;
+    botSyncTimer = setTimeout(() => {
+      botSyncTimer = null;
+      const extra = { reason: pendingReason };
+      pendingReason = null;
+      syncWithBot("state_snapshot", extra);
+    }, 350);
   }
 
   function saveToLocalStorage(data, reason) {
@@ -190,10 +346,19 @@ window.addEventListener("load", () => {
       const data = JSON.stringify(worldState);
       saveToLocalStorage(data, reason);
 
+      let storageLabel = "localStorage";
       if (hasCloudStorage) {
-        await cloudSetItem(STORAGE_KEY, data);
-        console.log("Saved to Telegram CloudStorage:", reason);
+        try {
+          await cloudSetItem(STORAGE_KEY, data);
+          storageLabel = "Telegram CloudStorage + localStorage";
+          console.log("Saved to Telegram CloudStorage:", reason);
+        } catch (err) {
+          console.warn("CloudStorage save failed", err);
+        }
       }
+      updateInspectorStoredState(data, storageLabel);
+
+      scheduleStatePush(reason || "save");
     } catch (e) {
       console.warn("Save error:", e);
     }
@@ -218,11 +383,11 @@ window.addEventListener("load", () => {
 
       const data = JSON.parse(raw);
       Object.assign(worldState, data);
+      updateInspectorCurrentState();
     } catch (e) {
       console.warn("Load error:", e);
     }
   }
-
 
   // ========= РЕНДЕР МИРА =========
   function applyArchetype(arch) {
@@ -296,9 +461,11 @@ window.addEventListener("load", () => {
     if (rankTopSmall) {
       rankTopSmall.textContent = worldState.rankTop.toLocaleString("ru-RU");
     }
+
+    updateInspectorCurrentState();
   }
 
-    // ========= СОЗДАНИЕ МИРА =========
+  // ========= СОЗДАНИЕ МИРА =========
   const archCards = document.querySelectorAll(".archetype-card");
   const worldNameInput = document.getElementById("worldNameInput");
   const btnCreateWorld = document.getElementById("btnCreateWorld");
@@ -343,7 +510,6 @@ window.addEventListener("load", () => {
       showScreen("home");
     });
   }
-
 
   // ========= РОУТЕР ПО ЭКРАНАМ =========
 
@@ -616,13 +782,25 @@ window.addEventListener("load", () => {
         worldState.energyNow + 5
       );
       renderWorld();
+      saveStateToServer("passive_regen");
     }
   }, 15000);
+
+  window.addEventListener("beforeunload", () => {
+    if (!tg || !tg.sendData) return;
+    try {
+      syncWithBot("state_snapshot", { reason: "unload" });
+    } catch (err) {
+      console.warn("sendData before unload failed", err);
+    }
+  });
 
   // ========= СТАРТ =========
 
   (async () => {
     await loadStateFromServer();
+    await refreshInspectorStorage();
+    scheduleStatePush("boot");
 
     if (worldState.isCreated) {
       generateDailyMissions();
@@ -635,5 +813,4 @@ window.addEventListener("load", () => {
       showScreen("create");
     }
   })();
-}); 
-
+});
