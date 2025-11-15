@@ -16,6 +16,7 @@ const MIME_TYPES = {
   '.svg': 'image/svg+xml',
 };
 
+const MATCH_WAIT_TIMEOUT = 8000;
 const missionTemplates = [
   {
     id: 'stabilize_flow',
@@ -127,6 +128,7 @@ function saveDb(db) {
 }
 
 const db = loadDb();
+const waitingPlayers = new Map();
 
 function persistDb() {
   saveDb(db);
@@ -254,6 +256,58 @@ function pickRandomOpponent(userId) {
   }
   const fallback = fallbackOpponents[Math.floor(Math.random() * fallbackOpponents.length)];
   return { ...fallback, isBot: true };
+}
+
+function buildPlayerSnapshot(userId) {
+  const record = ensureWorld(userId);
+  const ranking = db.rankings[userId];
+  const opponent = buildOpponentFromWorld(record, ranking);
+  if (opponent) {
+    return opponent;
+  }
+  const initials = userId.slice(-4).toUpperCase();
+  return {
+    userId,
+    codename: `PILOT-${initials}`,
+    avatar: record.state?.profile?.avatarEmoji || '🛰️',
+    worldName: record.state?.name || 'Неизвестный мир',
+    archetype: record.state?.archetype || 'tech',
+    rating: ranking?.rating || 1200,
+    wins: ranking?.wins || 0,
+    losses: ranking?.losses || 0,
+    level: record.state?.level || 1,
+    energy: record.state?.energyMax || 900,
+    regen: Math.max(5, Math.round((record.state?.energyMax || 800) / 90)),
+    power: Math.max(24, Math.round((record.state?.level || 1) * 3.5 + 18)),
+    isBot: false,
+  };
+}
+
+function dequeueOpponent(excludeUserId) {
+  for (const [candidateId, entry] of waitingPlayers.entries()) {
+    if (candidateId === excludeUserId) {
+      continue;
+    }
+    waitingPlayers.delete(candidateId);
+    if (entry.timeout) {
+      clearTimeout(entry.timeout);
+    }
+    return entry;
+  }
+  return null;
+}
+
+function respondMatch(res, opponent, matched) {
+  if (!res || res.writableEnded) {
+    return;
+  }
+  const eta = matched ? 1 : 2 + Math.floor(Math.random() * 3);
+  sendJson(res, 200, {
+    opponent,
+    etaSeconds: eta,
+    matchId: `${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+    matched,
+  });
 }
 
 function parseRequestBody(req) {
@@ -418,12 +472,45 @@ async function handleMatchmaking(req, res, urlObj) {
     sendJson(res, 400, { error: 'userId is required' });
     return;
   }
-  const opponent = pickRandomOpponent(userId);
-  const etaSeconds = 2 + Math.floor(Math.random() * 4);
-  sendJson(res, 200, {
-    opponent,
-    etaSeconds,
-    matchId: `${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+  if (waitingPlayers.has(userId)) {
+    sendJson(res, 409, { error: 'already_searching' });
+    return;
+  }
+
+  const playerSnapshot = buildPlayerSnapshot(userId);
+  const opponentEntry = dequeueOpponent(userId);
+  if (opponentEntry) {
+    respondMatch(opponentEntry.res, playerSnapshot, true);
+    respondMatch(res, opponentEntry.snapshot, true);
+    return;
+  }
+
+  const entry = {
+    userId,
+    res,
+    snapshot: playerSnapshot,
+    timeout: null,
+  };
+  waitingPlayers.set(userId, entry);
+
+  const timeoutMs = MATCH_WAIT_TIMEOUT + Math.floor(Math.random() * 2000);
+  entry.timeout = setTimeout(() => {
+    if (!waitingPlayers.has(userId)) {
+      return;
+    }
+    waitingPlayers.delete(userId);
+    const fallback = pickRandomOpponent(userId);
+    respondMatch(res, fallback, false);
+  }, timeoutMs);
+
+  req.on('close', () => {
+    const pending = waitingPlayers.get(userId);
+    if (pending && pending.res === res) {
+      waitingPlayers.delete(userId);
+      if (pending.timeout) {
+        clearTimeout(pending.timeout);
+      }
+    }
   });
 }
 

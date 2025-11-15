@@ -29,9 +29,8 @@ const defaultOpponent = {
 let activeOpponent = null;
 const matchmakingState = {
   searching: false,
-  timer: null,
-  etaTimer: null,
-  etaLeft: 0,
+  waitTicker: null,
+  waitSeconds: 0,
 };
 if (tg) {
 tg.expand();
@@ -424,6 +423,27 @@ worldState.rankTop = playerRanking.position;
         refreshInspectorStorage();
       });
     }
+    if (changelogEls.toggle) {
+      changelogEls.toggle.textContent = changelogExpanded ? "Свернуть" : "Показать";
+    }
+  }
+
+  function initChangelogControls() {
+    if (changelogEls.toggle) {
+      changelogEls.toggle.addEventListener("click", () => {
+        setChangelogExpanded(!changelogExpanded);
+      });
+    }
+    setChangelogExpanded(false);
+  }
+
+  renderChangelog(releaseNotes);
+  initChangelogControls();
+  initProfileSettings();
+  refreshProfileUI();
+
+  function serializeState() {
+    return JSON.parse(JSON.stringify(worldState));
   }
 
   initInspectorControls();
@@ -1354,14 +1374,28 @@ worldState.order = 100 - worldState.chaos;
     }
   }
 
-  function clearMatchmakingTimers() {
-    if (matchmakingState.timer) {
-      clearTimeout(matchmakingState.timer);
-      matchmakingState.timer = null;
+  function startSearchTicker() {
+    if (matchmakingState.waitTicker) {
+      clearInterval(matchmakingState.waitTicker);
     }
-    if (matchmakingState.etaTimer) {
-      clearInterval(matchmakingState.etaTimer);
-      matchmakingState.etaTimer = null;
+    matchmakingState.waitSeconds = 0;
+    setMatchStatus("Поиск реального соперника…", "search");
+    if (matchMetaEl) {
+      matchMetaEl.textContent = "Связываемся с пилотами рейтинга...";
+    }
+    matchmakingState.waitTicker = setInterval(() => {
+      matchmakingState.waitSeconds += 1;
+      setMatchStatus(
+        `Поиск реального соперника… ${matchmakingState.waitSeconds} с`,
+        "search"
+      );
+    }, 1000);
+  }
+
+  function stopSearchTicker() {
+    if (matchmakingState.waitTicker) {
+      clearInterval(matchmakingState.waitTicker);
+      matchmakingState.waitTicker = null;
     }
   }
 
@@ -1377,17 +1411,6 @@ worldState.order = 100 - worldState.chaos;
     return resp.json();
   }
 
-  function updateSearchCountdown() {
-    if (matchmakingState.etaLeft <= 0) return;
-    setMatchStatus(
-      `Поиск реального соперника… ${matchmakingState.etaLeft} с`,
-      "search"
-    );
-    if (matchMetaEl) {
-      matchMetaEl.textContent = "Связываемся с пилотами рейтинга...";
-    }
-  }
-
   async function startMatchSearch() {
     if (matchmakingState.searching) return;
     const userId = getPlayerId();
@@ -1400,32 +1423,18 @@ worldState.order = 100 - worldState.chaos;
     updateMatchMeta(null);
     renderBattlePanel();
     updateMatchButtons();
-    setMatchStatus("Поиск реального соперника...", "search");
+    startSearchTicker();
 
     try {
       const payload = await fetchOpponentFromServer();
-      const eta = Math.max(1, payload.etaSeconds || 3);
-      matchmakingState.etaLeft = eta;
-      updateSearchCountdown();
-      await new Promise((resolve) => {
-        matchmakingState.timer = setTimeout(resolve, eta * 1000);
-        matchmakingState.etaTimer = setInterval(() => {
-          matchmakingState.etaLeft -= 1;
-          if (matchmakingState.etaLeft <= 0) {
-            clearMatchmakingTimers();
-          } else {
-            updateSearchCountdown();
-          }
-        }, 1000);
-      });
-      clearMatchmakingTimers();
+      stopSearchTicker();
       activeOpponent = payload.opponent || null;
       if (activeOpponent) {
         renderBattlePanel();
-        setMatchStatus(
-          `Пилот ${activeOpponent.codename} готов к бою.`,
-          "ready"
-        );
+        const statusText = activeOpponent.isBot
+          ? `Сервер подобрал тренера ${activeOpponent.codename}.`
+          : `Пилот ${activeOpponent.codename} готов к бою.`;
+        setMatchStatus(statusText, "ready");
         syncWithBot("match_found", {
           opponentId: activeOpponent.userId,
           rating: activeOpponent.rating,
@@ -1435,10 +1444,11 @@ worldState.order = 100 - worldState.chaos;
         setMatchStatus("Сервер не прислал соперника. Попробуй ещё раз.", "error");
       }
     } catch (err) {
+      stopSearchTicker();
       console.warn("matchmaking failed", err);
       setMatchStatus("Не удалось найти соперника. Попробуй ещё раз.", "error");
     } finally {
-      clearMatchmakingTimers();
+      stopSearchTicker();
       matchmakingState.searching = false;
       updateMatchMeta(activeOpponent);
       updateMatchButtons();
