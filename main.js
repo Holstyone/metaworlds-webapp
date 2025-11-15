@@ -1033,6 +1033,41 @@ worldState.order = 100 - worldState.chaos;
   if (!resp.ok) throw new Error(`Request failed with ${resp.status}`);
   return resp.json();
 }
+//--//
+async function saveWorldState(reason = "") {
+  try {
+    const data = JSON.stringify(worldState);
+
+    saveToLocalStorage(data, reason);
+
+    if (hasCloudStorage) {
+      try {
+        await cloudSetItem(STORAGE_KEY, data);
+      } catch (err) {
+        console.warn("Cloud save failed:", err);
+      }
+    }
+
+    if (API_BASE) {
+      try {
+        await postJson("/api/world", {
+          userId: playerId,
+          state: serializeState(),
+          reason,
+          timestamp: Date.now(),
+        });
+      } catch (err) {
+        console.warn("Server save failed", err);
+      }
+    }
+
+    scheduleStatePush(reason || "save");
+  } catch (err) {
+    console.warn("saveWorldState error", err);
+  }
+}
+
+ //
 
   (async () => {
     await loadStateFromServer();
