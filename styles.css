@@ -290,6 +290,117 @@ body {
   margin-top: 6px;
 }
 
+.inspector-card {
+  margin-top: 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(2, 6, 23, 0.75);
+  padding: 14px 16px 16px;
+  box-shadow: 0 12px 35px rgba(15, 23, 42, 0.65);
+}
+
+.inspector-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.inspector-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.inspector-subtitle {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+.inspector-toggle {
+  border: 1px solid rgba(94, 234, 212, 0.5);
+  background: rgba(45, 212, 191, 0.15);
+  color: #a5f3fc;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.inspector-panel {
+  margin-top: 12px;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.inspector-card.inspector-open .inspector-panel {
+  display: flex;
+}
+
+.inspector-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.inspector-refresh {
+  border: 1px solid rgba(248, 250, 252, 0.2);
+  background: rgba(30, 64, 175, 0.4);
+  color: #f1f5f9;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.inspector-status {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.inspector-section {
+  border: 1px solid rgba(51, 65, 85, 0.9);
+  border-radius: 14px;
+  padding: 10px;
+  background: rgba(15, 23, 42, 0.85);
+}
+
+.inspector-label {
+  font-size: 11px;
+  opacity: 0.75;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inspector-source {
+  font-size: 11px;
+  color: #cbd5f5;
+  opacity: 0.9;
+  background: rgba(30, 64, 175, 0.35);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.inspector-pre {
+  margin: 0;
+  max-height: 120px;
+  overflow: auto;
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(2, 6, 23, 0.8);
+  border: 1px solid rgba(51, 65, 85, 0.9);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 /* экран battle */
 
 .battle-header-row {
