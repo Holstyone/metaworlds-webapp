@@ -2,9 +2,33 @@ window.addEventListener("load", () => {
 const STORAGE_KEY = "metaworlds_state_v1";
 const tg = window.Telegram?.WebApp;
 const API_BASE = "";
-const playerId = tg?.initDataUnsafe?.user?.id
-  ? `tg_${tg.initDataUnsafe.user.id}`
-  : "local-debug";
+const LOCAL_DEBUG_ID_KEY = "metaworlds_local_player_id";
+
+function resolvePlayerId() {
+  if (tg?.initDataUnsafe?.user?.id) {
+    return `tg_${tg.initDataUnsafe.user.id}`;
+  }
+
+  try {
+    const stored = window.localStorage?.getItem(LOCAL_DEBUG_ID_KEY);
+    if (stored) {
+      return stored;
+    }
+
+    const randomPart = window.crypto?.randomUUID
+      ? window.crypto.randomUUID()
+      : `${Math.random().toString(36).slice(2, 10)}-${Date.now()}`;
+    const fallbackId = `local-${randomPart}`;
+    window.localStorage?.setItem(LOCAL_DEBUG_ID_KEY, fallbackId);
+    return fallbackId;
+  } catch (err) {
+    console.warn("Failed to persist local debug id", err);
+  }
+
+  return `local-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+const playerId = resolvePlayerId();
 let playerRanking = {
   rating: 1200,
   position: 0,
