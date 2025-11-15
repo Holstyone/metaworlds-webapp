@@ -1,7 +1,16 @@
 window.addEventListener("load", () => {
   const STORAGE_KEY = "metaworlds_state_v1";
   const tg = window.Telegram?.WebApp;
-
+  const API_BASE = "";
+  const playerId = tg?.initDataUnsafe?.user?.id
+    ? `tg_${tg.initDataUnsafe.user.id}`
+    : "local-debug";
+  let playerRanking = {
+    rating: 1200,
+    position: 0,
+    wins: 0,
+    losses: 0,
+  };
   if (tg) {
     tg.expand();
     tg.ready();
@@ -45,8 +54,8 @@ window.addEventListener("load", () => {
         used: false,
       },
     ],
-    archetype: null,     // "tech" | "chaos" | "harmony"
-    isCreated: false,    // мир создан или ещё нет
+    archetype: null, // "tech" | "chaos" | "harmony"
+    isCreated: false, // мир создан или ещё нет
   };
 
   // ========= ШАБЛОНЫ МИССИЙ ДНЯ =========
@@ -126,9 +135,40 @@ window.addEventListener("load", () => {
 
   const hasCloudStorage = Boolean(tg?.CloudStorage);
 
-  // ========= DATA INSPECTOR =========
+  function getPlayerId() {
+    return playerId;
+  }
+
+  async function postJson(url, body) {
+    const endpoint = url.startsWith("http") ? url : `${API_BASE}${url}`;
+    const resp = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      credentials: "same-origin",
+    });
+    if (!resp.ok) {
+      throw new Error(`Request failed with ${resp.status}`);
+    }
+    return resp.json();
+  }
 
   let lastSyncedPayload = null;
+
+  function updatePlayerRanking(ranking) {
+    if (!ranking) return;
+    playerRanking = {
+      rating: ranking.rating ?? playerRanking.rating,
+      position: ranking.position ?? playerRanking.position,
+      wins: ranking.wins ?? playerRanking.wins,
+      losses: ranking.losses ?? playerRanking.losses,
+    };
+    if (playerRanking.position) {
+      worldState.rankTop = playerRanking.position;
+    }
+  }
 
   const inspectorEls = {
     card: document.getElementById("dataInspectorCard"),
@@ -186,7 +226,6 @@ window.addEventListener("load", () => {
   async function readStoredStateSnapshot() {
     let raw = null;
     let source = null;
-
     if (hasCloudStorage) {
       try {
         raw = await cloudGetItem(STORAGE_KEY);
@@ -257,14 +296,11 @@ window.addEventListener("load", () => {
   updateInspectorLastSnapshot();
   updateInspectorStoredState(null);
 
-  // ========= СИНК С БОТОМ / CLOUDSTORAGE =========
-
   function serializeState() {
     return JSON.parse(JSON.stringify(worldState));
   }
 
   function syncWithBot(eventType, extra) {
-    if (!tg || !tg.sendData) return;
     const payload = {
       type: eventType,
       world: {
@@ -285,17 +321,32 @@ window.addEventListener("load", () => {
     };
     lastSyncedPayload = payload;
     updateInspectorLastSnapshot();
-
-    try {
-      tg.sendData(JSON.stringify(payload));
-    } catch (err) {
-      console.warn("sendData failed", err);
+    if (tg?.sendData) {
+      try {
+        tg.sendData(JSON.stringify(payload));
+      } catch (err) {
+        console.warn("sendData failed", err);
+      }
     }
+    sendEventToServer(eventType, extra);
+  }
+
+  function sendEventToServer(eventType, extra) {
+    const userId = getPlayerId();
+    if (!userId) return;
+    postJson("/api/events", {
+      userId,
+      type: eventType,
+      state: serializeState(),
+      extra: extra || null,
+      timestamp: new Date().toISOString(),
+    }).catch((err) => {
+      console.warn("Server event sync failed", err);
+    });
   }
 
   let botSyncTimer = null;
   let pendingReason = null;
-
   function scheduleStatePush(reason = "auto") {
     if (!tg || !tg.sendData) return;
     pendingReason = reason;
@@ -341,11 +392,10 @@ window.addEventListener("load", () => {
     });
   }
 
-  async function saveStateToServer(reason = "") {
+  async function saveWorldState(reason = "") {
     try {
       const data = JSON.stringify(worldState);
       saveToLocalStorage(data, reason);
-
       let storageLabel = "localStorage";
       if (hasCloudStorage) {
         try {
@@ -357,7 +407,17 @@ window.addEventListener("load", () => {
         }
       }
       updateInspectorStoredState(data, storageLabel);
-
+      const userId = getPlayerId();
+      if (userId) {
+        postJson("/api/world", {
+          userId,
+          state: serializeState(),
+          reason: reason || null,
+          timestamp: Date.now(),
+        }).catch((err) => {
+          console.warn("Server save failed", err);
+        });
+      }
       scheduleStatePush(reason || "save");
     } catch (e) {
       console.warn("Save error:", e);
@@ -365,28 +425,56 @@ window.addEventListener("load", () => {
   }
 
   async function loadStateFromServer() {
-    try {
-      let raw = null;
-
-      if (hasCloudStorage) {
-        raw = await cloudGetItem(STORAGE_KEY);
-        if (raw) {
-          console.log("Loaded from Telegram CloudStorage");
+    let loadedFromServer = false;
+    const userId = getPlayerId();
+    if (userId) {
+      try {
+        const resp = await fetch(
+          `/api/world?userId=${encodeURIComponent(userId)}`,
+          { credentials: "same-origin" }
+        );
+        if (resp.ok) {
+          const payload = await resp.json();
+          if (payload?.state) {
+            Object.assign(worldState, payload.state);
+            updatePlayerRanking(payload.ranking);
+            loadedFromServer = true;
+          }
         }
+      } catch (err) {
+        console.warn("Server load failed", err);
       }
-
-      if (!raw) {
-        raw = loadFromLocalStorage();
-        if (!raw) return;
-        console.log("Loaded from localStorage");
-      }
-
-      const data = JSON.parse(raw);
-      Object.assign(worldState, data);
-      updateInspectorCurrentState();
-    } catch (e) {
-      console.warn("Load error:", e);
     }
+
+    if (!loadedFromServer) {
+      try {
+        let raw = null;
+        if (hasCloudStorage) {
+          raw = await cloudGetItem(STORAGE_KEY);
+          if (raw) {
+            console.log("Loaded from Telegram CloudStorage");
+          }
+        }
+        if (!raw) {
+          raw = loadFromLocalStorage();
+          if (raw) {
+            console.log("Loaded from localStorage");
+          }
+        }
+        if (raw) {
+          const data = JSON.parse(raw);
+          Object.assign(worldState, data);
+          loadedFromServer = true;
+        }
+      } catch (err) {
+        console.warn("Load error:", err);
+      }
+    }
+
+    if (loadedFromServer) {
+      updateInspectorCurrentState();
+    }
+    return loadedFromServer;
   }
 
   // ========= РЕНДЕР МИРА =========
@@ -426,7 +514,20 @@ window.addEventListener("load", () => {
 
     byId("heroName").textContent = worldState.name;
     byId("heroLevel").textContent = worldState.level;
-    byId("heroTop").textContent = worldState.rankTop.toLocaleString("ru-RU");
+    const heroTopEl = byId("heroTop");
+    const heroRatingEl = document.getElementById("heroRating");
+    const currentTop =
+      playerRanking.position || worldState.rankTop || 0;
+    if (heroTopEl) {
+      heroTopEl.textContent = currentTop
+        ? Number(currentTop).toLocaleString("ru-RU")
+        : "—";
+    }
+    if (heroRatingEl) {
+      heroRatingEl.textContent = (playerRanking.rating || 1200).toLocaleString(
+        "ru-RU"
+      );
+    }
 
     byId("xpNow").textContent = worldState.xp;
     byId("xpNext").textContent = worldState.nextLevelXp;
@@ -459,7 +560,13 @@ window.addEventListener("load", () => {
 
     const rankTopSmall = document.getElementById("rankTopSmall");
     if (rankTopSmall) {
-      rankTopSmall.textContent = worldState.rankTop.toLocaleString("ru-RU");
+      rankTopSmall.textContent = heroTopEl?.textContent || "—";
+    }
+    const rankRatingSmall = document.getElementById("rankRatingSmall");
+    if (rankRatingSmall) {
+      rankRatingSmall.textContent = (
+        playerRanking.rating || 1200
+      ).toLocaleString("ru-RU");
     }
 
     updateInspectorCurrentState();
@@ -504,7 +611,7 @@ window.addEventListener("load", () => {
       renderBoosts();
 
       syncWithBot("world_created", { archetype: selectedArch, name });
-      saveStateToServer("world_created");
+      saveWorldState("world_created");
 
       tg?.HapticFeedback?.impactOccurred?.("medium");
       showScreen("home");
@@ -553,12 +660,14 @@ window.addEventListener("load", () => {
       }</span>
         </div>
         <div class="mission-footer">
-          <span class="mission-status">${m.done ? "✅ Выполнено" : "Доступно"}</span>
+          <span class="mission-status">${
+            m.done ? "✅ Выполнено" : "Доступно"
+          }</span>
           ${
             m.done
               ? ""
               : `<button class="mission-btn" data-mission-id="${m.id}">
-                   Выполнить
+                  Выполнить
                  </button>`
           }
         </div>
@@ -616,6 +725,7 @@ window.addEventListener("load", () => {
     worldState.dailyQuestsDone = worldState.missions.filter(
       (m) => m.done
     ).length;
+    worldState.travelWorlds = (worldState.travelWorlds || 0) + 1;
 
     worldState.chaos = Math.max(0, worldState.chaos - 2);
     worldState.order = 100 - worldState.chaos;
@@ -623,7 +733,7 @@ window.addEventListener("load", () => {
     renderWorld();
     renderMissions();
     syncWithBot("mission_completed", { missionId: mission.id });
-    saveStateToServer("mission_completed");
+    saveWorldState("mission_completed");
     tg?.HapticFeedback?.impactOccurred?.("medium");
   }
 
@@ -645,12 +755,14 @@ window.addEventListener("load", () => {
           <span>💰 Стоимость: ${b.costCoins.toLocaleString("ru-RU")}</span>
         </div>
         <div class="mission-footer">
-          <span class="mission-status">${b.used ? "✅ Использован" : "Доступен"}</span>
+          <span class="mission-status">${
+            b.used ? "✅ Использован" : "Доступен"
+          }</span>
           ${
             b.used
               ? ""
               : `<button class="mission-btn" data-boost-id="${b.id}">
-                   Активировать
+                  Активировать
                  </button>`
           }
         </div>
@@ -693,7 +805,7 @@ window.addEventListener("load", () => {
     renderWorld();
     renderBoosts();
     syncWithBot("boost_used", { boostId: boost.id });
-    saveStateToServer("boost_used");
+    saveWorldState("boost_used");
     tg?.HapticFeedback?.impactOccurred?.("medium");
   }
 
@@ -763,7 +875,7 @@ window.addEventListener("load", () => {
 
           worldState.order = 100 - worldState.chaos;
           renderWorld();
-          saveStateToServer("battle_finished");
+          saveWorldState("battle_finished");
           syncWithBot("battle_finished", { win, leftHp, rightHp });
 
           btnStartBattle.disabled = false;
@@ -782,7 +894,7 @@ window.addEventListener("load", () => {
         worldState.energyNow + 5
       );
       renderWorld();
-      saveStateToServer("passive_regen");
+      saveWorldState("passive_regen");
     }
   }, 15000);
 
@@ -803,7 +915,9 @@ window.addEventListener("load", () => {
     scheduleStatePush("boot");
 
     if (worldState.isCreated) {
-      generateDailyMissions();
+      if (!worldState.missions || worldState.missions.length === 0) {
+        generateDailyMissions();
+      }
       renderWorld();
       renderMissions();
       renderBoosts();
