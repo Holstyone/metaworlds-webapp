@@ -423,27 +423,6 @@ worldState.rankTop = playerRanking.position;
         refreshInspectorStorage();
       });
     }
-    if (changelogEls.toggle) {
-      changelogEls.toggle.textContent = changelogExpanded ? "Свернуть" : "Показать";
-    }
-  }
-
-  function initChangelogControls() {
-    if (changelogEls.toggle) {
-      changelogEls.toggle.addEventListener("click", () => {
-        setChangelogExpanded(!changelogExpanded);
-      });
-    }
-    setChangelogExpanded(false);
-  }
-
-  renderChangelog(releaseNotes);
-  initChangelogControls();
-  initProfileSettings();
-  refreshProfileUI();
-
-  function serializeState() {
-    return JSON.parse(JSON.stringify(worldState));
   }
 
   initInspectorControls();
