@@ -51,6 +51,51 @@ const missionTemplates = [
   },
 ];
 
+const fallbackOpponents = [
+  {
+    userId: 'bot_zenith',
+    codename: 'ZENITH',
+    avatar: '🛡️',
+    worldName: 'Осколок Гармонии',
+    archetype: 'harmony',
+    rating: 1350,
+    wins: 18,
+    losses: 4,
+    level: 12,
+    energy: 980,
+    regen: 14,
+    power: 38,
+  },
+  {
+    userId: 'bot_nebula',
+    codename: 'NEBULA',
+    avatar: '🪐',
+    worldName: 'Туманность Архива',
+    archetype: 'tech',
+    rating: 1290,
+    wins: 10,
+    losses: 3,
+    level: 10,
+    energy: 860,
+    regen: 12,
+    power: 34,
+  },
+  {
+    userId: 'bot_rogue',
+    codename: 'ROGUE-13',
+    avatar: '🔥',
+    worldName: 'Рубеж Хаоса',
+    archetype: 'chaos',
+    rating: 1210,
+    wins: 8,
+    losses: 6,
+    level: 9,
+    energy: 920,
+    regen: 11,
+    power: 32,
+  },
+];
+
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
@@ -173,6 +218,42 @@ function recordEvent({ userId, type, payload }) {
   if (db.events.length > 5000) {
     db.events.splice(0, db.events.length - 5000);
   }
+}
+
+function buildOpponentFromWorld(record, ranking) {
+  if (!record || !record.state) {
+    return null;
+  }
+  const state = record.state;
+  const profile = state.profile || {};
+  const codename = profile.displayName || state.name || 'Пилот';
+  return {
+    userId: record.userId,
+    codename,
+    avatar: profile.avatarEmoji || '🛰️',
+    worldName: state.name || 'Неизвестный мир',
+    archetype: state.archetype || 'tech',
+    rating: ranking?.rating || 1200,
+    wins: ranking?.wins || 0,
+    losses: ranking?.losses || 0,
+    level: state.level || 1,
+    energy: state.energyMax || 1000,
+    regen: Math.max(5, Math.round((state.energyMax || 800) / 80)),
+    power: Math.max(20, Math.round((state.level || 1) * 4.2 + (state.chaos || 0) * 0.1)),
+    isBot: false,
+  };
+}
+
+function pickRandomOpponent(userId) {
+  const candidates = Object.values(db.worlds).filter((entry) => entry.userId !== userId && entry.state);
+  if (candidates.length) {
+    const randomIdx = Math.floor(Math.random() * candidates.length);
+    const candidate = candidates[randomIdx];
+    const ranking = db.rankings[candidate.userId];
+    return buildOpponentFromWorld(candidate, ranking);
+  }
+  const fallback = fallbackOpponents[Math.floor(Math.random() * fallbackOpponents.length)];
+  return { ...fallback, isBot: true };
 }
 
 function parseRequestBody(req) {
@@ -331,6 +412,21 @@ async function handleEvent(req, res) {
   }
 }
 
+async function handleMatchmaking(req, res, urlObj) {
+  const userId = urlObj.searchParams.get('userId');
+  if (!userId) {
+    sendJson(res, 400, { error: 'userId is required' });
+    return;
+  }
+  const opponent = pickRandomOpponent(userId);
+  const etaSeconds = 2 + Math.floor(Math.random() * 4);
+  sendJson(res, 200, {
+    opponent,
+    etaSeconds,
+    matchId: `${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+  });
+}
+
 async function requestListener(req, res) {
   const urlObj = new URL(req.url, `http://${req.headers.host}`);
   if (urlObj.pathname === '/api/world' && req.method === 'GET') {
@@ -343,6 +439,10 @@ async function requestListener(req, res) {
   }
   if (urlObj.pathname === '/api/events' && req.method === 'POST') {
     handleEvent(req, res);
+    return;
+  }
+  if (urlObj.pathname === '/api/matchmaking' && req.method === 'GET') {
+    handleMatchmaking(req, res, urlObj);
     return;
   }
   serveStaticFile(req, res, urlObj.pathname);

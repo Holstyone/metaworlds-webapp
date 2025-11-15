@@ -11,6 +11,28 @@ let playerRanking = {
   wins: 0,
   losses: 0,
 };
+const defaultOpponent = {
+  userId: "bot_placeholder",
+  codename: "HASTER100",
+  avatar: "🐕‍🦺",
+  worldName: "Случайный противник",
+  archetype: "tech",
+  rating: 1240,
+  wins: 6,
+  losses: 3,
+  level: 9,
+  energy: 920,
+  regen: 11,
+  power: 32,
+  isBot: true,
+};
+let activeOpponent = null;
+const matchmakingState = {
+  searching: false,
+  timer: null,
+  etaTimer: null,
+  etaLeft: 0,
+};
 if (tg) {
 tg.expand();
 tg.ready();
@@ -983,6 +1005,7 @@ rankRatingSmall.textContent = (playerRanking.rating || 1200).toLocaleString(
 );
 }
 
+    renderBattlePanel();
     updateInspectorCurrentState();
   }
 
@@ -1232,11 +1255,207 @@ worldState.order = 100 - worldState.chaos;
   const countdownEl = document.getElementById("countdown");
   const resultTextEl = document.getElementById("battleResultText");
   const btnStartBattle = document.getElementById("btnStartBattle");
+  const btnFindOpponent = document.getElementById("btnFindOpponent");
+  const matchStatusEl = document.getElementById("matchStatus");
+  const matchMetaEl = document.getElementById("matchMeta");
+  const rightNameEl = document.getElementById("rightName");
+  const leftNameEl = document.getElementById("leftName");
+  const leftNickEl = document.getElementById("leftNick");
+  const rightNickEl = document.getElementById("rightNick");
+  const leftTagEl = document.getElementById("leftTag");
+  const rightTagEl = document.getElementById("rightTag");
+  const leftAvatarEl = document.getElementById("leftAvatar");
+  const rightAvatarEl = document.getElementById("rightAvatar");
+  const leftEnergyStatEl = document.getElementById("leftEnergyStat");
+  const rightEnergyStatEl = document.getElementById("rightEnergyStat");
+  const leftRegenEl = document.getElementById("leftRegen");
+  const rightRegenEl = document.getElementById("rightRegen");
+  const leftPowerEl = document.getElementById("leftPower");
+  const rightPowerEl = document.getElementById("rightPower");
+
+  function getOpponent() {
+    return activeOpponent || defaultOpponent;
+  }
+
+  function formatArchetype(code) {
+    if (code === "tech") return "Кибер-орден";
+    if (code === "chaos") return "Хаос-рейдер";
+    if (code === "harmony") return "Страж гармонии";
+    return "Пилот MetaWorlds";
+  }
+
+  function setMatchStatus(text, state = "idle") {
+    if (!matchStatusEl) return;
+    matchStatusEl.textContent = text;
+    matchStatusEl.dataset.state = state;
+  }
+
+  function describeOpponent(opponent) {
+    if (!opponent) {
+      return "Рейтинг появится после успешного поиска.";
+    }
+    const record = [
+      `${opponent.worldName} • рейтинг ${opponent.rating}`,
+      `${opponent.wins} побед • ${opponent.losses} поражений`,
+    ];
+    return record.join("\n");
+  }
+
+  function updateMatchMeta(opponent) {
+    if (!matchMetaEl) return;
+    matchMetaEl.textContent = describeOpponent(opponent);
+  }
+
+  function updateMatchButtons() {
+    if (btnFindOpponent) {
+      btnFindOpponent.disabled = matchmakingState.searching;
+      if (matchmakingState.searching) {
+        btnFindOpponent.textContent = "Поиск...";
+      } else if (activeOpponent) {
+        btnFindOpponent.textContent = "🔄 Переподбор";
+      } else {
+        btnFindOpponent.textContent = "🔍 Искать соперника";
+      }
+    }
+    if (btnStartBattle) {
+      btnStartBattle.disabled = !activeOpponent || matchmakingState.searching;
+    }
+  }
+
+  function renderBattlePanel() {
+    if (!leftNameEl || !rightNameEl) return;
+    leftNameEl.textContent = worldState.name || "Твой мир";
+    const heroDisplayName =
+      (worldState.profile?.displayName || worldState.name || "Пилот").toUpperCase();
+    leftNickEl.textContent = heroDisplayName;
+    leftTagEl.textContent = formatArchetype(worldState.archetype);
+    leftAvatarEl.textContent = worldState.profile?.avatarEmoji || "🌌";
+    leftEnergyStatEl.textContent = worldState.energyMax || 1000;
+    leftRegenEl.textContent = Math.max(8, Math.round((worldState.energyMax || 800) / 90));
+    leftPowerEl.textContent = Math.max(20, worldState.level * 4 + 12);
+
+    const opponent = getOpponent();
+    rightNameEl.textContent = opponent.worldName;
+    rightNickEl.textContent = opponent.codename;
+    rightTagEl.textContent = formatArchetype(opponent.archetype);
+    rightAvatarEl.textContent = opponent.avatar || "🛰️";
+    rightEnergyStatEl.textContent = opponent.energy;
+    rightRegenEl.textContent = opponent.regen;
+    rightPowerEl.textContent = opponent.power;
+    if (!matchmakingState.searching) {
+      updateMatchMeta(activeOpponent);
+    }
+    updateMatchButtons();
+    if (!activeOpponent && !matchmakingState.searching) {
+      setMatchStatus(
+        "Нажми «Искать соперника», чтобы дождаться реального пилота.",
+        "idle"
+      );
+    }
+  }
+
+  function clearMatchmakingTimers() {
+    if (matchmakingState.timer) {
+      clearTimeout(matchmakingState.timer);
+      matchmakingState.timer = null;
+    }
+    if (matchmakingState.etaTimer) {
+      clearInterval(matchmakingState.etaTimer);
+      matchmakingState.etaTimer = null;
+    }
+  }
+
+  async function fetchOpponentFromServer() {
+    const userId = getPlayerId();
+    const endpoint = `/api/matchmaking?userId=${encodeURIComponent(userId)}`;
+    const resp = await fetch(`${API_BASE}${endpoint}`, {
+      credentials: "same-origin",
+    });
+    if (!resp.ok) {
+      throw new Error(`matchmaking_failed_${resp.status}`);
+    }
+    return resp.json();
+  }
+
+  function updateSearchCountdown() {
+    if (matchmakingState.etaLeft <= 0) return;
+    setMatchStatus(
+      `Поиск реального соперника… ${matchmakingState.etaLeft} с`,
+      "search"
+    );
+    if (matchMetaEl) {
+      matchMetaEl.textContent = "Связываемся с пилотами рейтинга...";
+    }
+  }
+
+  async function startMatchSearch() {
+    if (matchmakingState.searching) return;
+    const userId = getPlayerId();
+    if (!userId) {
+      window.alert("WebApp не знает твоего Telegram ID. Перезапусти окно из Telegram.");
+      return;
+    }
+    matchmakingState.searching = true;
+    activeOpponent = null;
+    updateMatchMeta(null);
+    renderBattlePanel();
+    updateMatchButtons();
+    setMatchStatus("Поиск реального соперника...", "search");
+
+    try {
+      const payload = await fetchOpponentFromServer();
+      const eta = Math.max(1, payload.etaSeconds || 3);
+      matchmakingState.etaLeft = eta;
+      updateSearchCountdown();
+      await new Promise((resolve) => {
+        matchmakingState.timer = setTimeout(resolve, eta * 1000);
+        matchmakingState.etaTimer = setInterval(() => {
+          matchmakingState.etaLeft -= 1;
+          if (matchmakingState.etaLeft <= 0) {
+            clearMatchmakingTimers();
+          } else {
+            updateSearchCountdown();
+          }
+        }, 1000);
+      });
+      clearMatchmakingTimers();
+      activeOpponent = payload.opponent || null;
+      if (activeOpponent) {
+        renderBattlePanel();
+        setMatchStatus(
+          `Пилот ${activeOpponent.codename} готов к бою.`,
+          "ready"
+        );
+        syncWithBot("match_found", {
+          opponentId: activeOpponent.userId,
+          rating: activeOpponent.rating,
+          bot: Boolean(activeOpponent.isBot),
+        });
+      } else {
+        setMatchStatus("Сервер не прислал соперника. Попробуй ещё раз.", "error");
+      }
+    } catch (err) {
+      console.warn("matchmaking failed", err);
+      setMatchStatus("Не удалось найти соперника. Попробуй ещё раз.", "error");
+    } finally {
+      clearMatchmakingTimers();
+      matchmakingState.searching = false;
+      updateMatchMeta(activeOpponent);
+      updateMatchButtons();
+    }
+  }
 
   function setHp(numEl, barEl, hp) {
     if (!numEl || !barEl) return;
     numEl.textContent = hp;
     barEl.style.width = Math.max(5, hp) + "%";
+  }
+
+  if (btnFindOpponent) {
+    btnFindOpponent.addEventListener("click", () => {
+      startMatchSearch();
+      tg?.HapticFeedback?.selectionChanged?.();
+    });
   }
 
   if (btnStartBattle) {
@@ -1247,12 +1466,21 @@ worldState.order = 100 - worldState.chaos;
         return;
       }
 
+      if (!activeOpponent) {
+        window.alert("Сначала найди соперника через сеть MetaWorlds.");
+        tg?.HapticFeedback?.notificationOccurred?.("error");
+        return;
+      }
+
       setHp(leftHpEl, leftHpBar, 100);
       setHp(rightHpEl, rightHpBar, 100);
       resultTextEl.textContent = "Бой начинается...";
       let cd = 3;
       countdownEl.textContent = cd;
       btnStartBattle.disabled = true;
+      if (btnFindOpponent) {
+        btnFindOpponent.disabled = true;
+      }
       tg?.HapticFeedback?.impactOccurred?.("light");
 
       const timer = setInterval(() => {
@@ -1290,9 +1518,23 @@ worldState.order = 100 - worldState.chaos;
           worldState.order = 100 - worldState.chaos;
           renderWorld();
           saveWorldState("battle_finished");
-          syncWithBot("battle_finished", { win, leftHp, rightHp });
+          syncWithBot("battle_finished", {
+            win,
+            leftHp,
+            rightHp,
+            opponentId: activeOpponent.userId,
+            opponentCodename: activeOpponent.codename,
+          });
+          setMatchStatus(
+            `Результат боя с ${activeOpponent.codename} отправлен в рейтинг.`,
+            "ready"
+          );
 
           btnStartBattle.disabled = false;
+          if (btnFindOpponent) {
+            btnFindOpponent.disabled = false;
+          }
+          countdownEl.textContent = "—";
           tg?.HapticFeedback?.impactOccurred?.("medium");
         }
       }, 600);
