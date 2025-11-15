@@ -28,6 +28,11 @@
             <div class="hero-sub">
               Твой мир • Уровень <span id="heroLevel"></span>
             </div>
+            <div class="hero-pilot" id="pilotLine">
+              <span id="pilotCallsign">Страж эпохи</span>
+              <span class="pilot-dot">•</span>
+              <span id="pilotMotto">Синхронизируйся с бесконечностью</span>
+            </div>
 
             <!-- прогресс уровня -->
             <div class="level-row">
@@ -50,7 +55,7 @@
 
         <div class="hero-main">
           <div class="hero-avatar-wrap">
-            <div class="hero-avatar">🧙‍♂️</div>
+            <div class="hero-avatar" id="heroAvatar">🧙‍♂️</div>
           </div>
 
           <div class="hero-stats">
@@ -289,6 +294,174 @@
       </div>
     </section>
 
+    <!-- ЭКРАН: ПРОФИЛЬ -->
+    <section class="screen" id="screen-profile" data-screen="profile">
+      <div class="screen-inner profile-settings">
+        <div class="screen-header">
+          <div class="screen-title">Профиль пилота</div>
+          <div class="screen-subtitle">
+            Настрой образ, уведомления и приватность, чтобы MetaWorlds подстраивался под тебя.
+          </div>
+        </div>
+
+        <div class="profile-preview-card">
+          <div class="profile-preview-avatar" id="profilePreviewAvatar">🧙‍♂️</div>
+          <div>
+            <div class="profile-preview-name" id="profilePreviewName">Страж эпохи</div>
+            <div class="profile-preview-motto" id="profilePreviewMotto">
+              Синхронизируйся с бесконечностью
+            </div>
+            <div class="profile-preview-meta">
+              <span id="profilePreviewTimezone">UTC+3 (Москва)</span>
+              <span>Напоминание: <strong id="profilePreviewReminder">18:00</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <form class="profile-form" id="profileForm">
+          <div class="profile-section">
+            <div class="profile-section-title">Основные данные</div>
+            <label class="input-label" for="profileDisplayName">Имя пилота</label>
+            <input
+              type="text"
+              class="input-text"
+              id="profileDisplayName"
+              maxlength="24"
+              placeholder="Например, Страж Эпохи"
+            />
+            <label class="input-label" for="profileMotto">Девиз / статус</label>
+            <textarea
+              class="input-text"
+              id="profileMotto"
+              rows="2"
+              maxlength="80"
+              placeholder="Короткая фраза, которая будет отображаться в профиле"
+            ></textarea>
+          </div>
+
+          <div class="profile-section">
+            <div class="profile-section-title">Аватар</div>
+            <div class="avatar-grid" id="avatarOptions">
+              <button type="button" class="avatar-option" data-avatar-option="🧙‍♂️">🧙‍♂️</button>
+              <button type="button" class="avatar-option" data-avatar-option="🛰️">🛰️</button>
+              <button type="button" class="avatar-option" data-avatar-option="🐉">🐉</button>
+              <button type="button" class="avatar-option" data-avatar-option="🌿">🌿</button>
+              <button type="button" class="avatar-option" data-avatar-option="⚙️">⚙️</button>
+              <button type="button" class="avatar-option" data-avatar-option="🦊">🦊</button>
+              <button type="button" class="avatar-option" data-avatar-option="🐺">🐺</button>
+              <button type="button" class="avatar-option" data-avatar-option="🦄">🦄</button>
+            </div>
+          </div>
+
+          <div class="profile-section">
+            <div class="profile-section-title">Уведомления</div>
+            <div class="profile-toggle-row">
+              <div>
+                <div class="toggle-title">Следить за энергией</div>
+                <div class="toggle-desc">Сообщать, когда энергия заполнена и можно идти в бой.</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="notifEnergy" />
+                <span class="switch-slider" aria-hidden="true"></span>
+              </label>
+            </div>
+            <div class="profile-toggle-row">
+              <div>
+                <div class="toggle-title">Напоминать о миссиях</div>
+                <div class="toggle-desc">Раз в день присылаем чек-лист доступных заданий.</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="notifMissions" />
+                <span class="switch-slider" aria-hidden="true"></span>
+              </label>
+            </div>
+            <div class="profile-toggle-row">
+              <div>
+                <div class="toggle-title">Уведомлять о PvP</div>
+                <div class="toggle-desc">Мгновенно пингуем, если кто-то бросил вызов.</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="notifBattles" />
+                <span class="switch-slider" aria-hidden="true"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="profile-section">
+            <div class="profile-section-title">Приватность и рейтинг</div>
+            <div class="profile-toggle-row">
+              <div>
+                <div class="toggle-title">Показывать рейтинг</div>
+                <div class="toggle-desc">Твой TOP и MMR будут видны друзьям.</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="privacyRating" />
+                <span class="switch-slider" aria-hidden="true"></span>
+              </label>
+            </div>
+            <div class="profile-toggle-row">
+              <div>
+                <div class="toggle-title">Раскрывать архетип</div>
+                <div class="toggle-desc">Помогает союзникам подобрать стратегию.</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="privacyArchetype" />
+                <span class="switch-slider" aria-hidden="true"></span>
+              </label>
+            </div>
+            <div class="profile-toggle-row">
+              <div>
+                <div class="toggle-title">Принимать вызовы</div>
+                <div class="toggle-desc">Разрешает другим командирам кидать дуэли.</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="privacyChallenges" />
+                <span class="switch-slider" aria-hidden="true"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="profile-section">
+            <div class="profile-section-title">Расписание и тема</div>
+            <label class="input-label" for="profileTimezone">Часовой пояс</label>
+            <select class="input-text" id="profileTimezone">
+              <option value="Europe/Moscow">UTC+3 — Москва</option>
+              <option value="Europe/Kaliningrad">UTC+2 — Калининград</option>
+              <option value="Asia/Yekaterinburg">UTC+5 — Екатеринбург</option>
+              <option value="Asia/Almaty">UTC+6 — Алматы</option>
+              <option value="Asia/Vladivostok">UTC+10 — Владивосток</option>
+            </select>
+
+            <label class="input-label" for="profileReminder">Напоминание о входе</label>
+            <select class="input-text" id="profileReminder">
+              <option value="08:00">08:00</option>
+              <option value="10:00">10:00</option>
+              <option value="12:00">12:00</option>
+              <option value="15:00">15:00</option>
+              <option value="18:00">18:00</option>
+              <option value="21:00">21:00</option>
+            </select>
+
+            <label class="input-label" for="profileTheme">Тема интерфейса</label>
+            <select class="input-text" id="profileTheme">
+              <option value="system">Как в системе</option>
+              <option value="light">Светлая</option>
+              <option value="dark">Тёмная</option>
+            </select>
+          </div>
+
+          <div class="profile-save-row">
+            <div class="profile-save-status" id="profileSaveStatus">
+              Изменения сохраняются автоматически
+            </div>
+            <button type="button" class="primary-button" id="btnSaveProfile">
+              Сохранить
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
     <!-- ЭКРАН: СОЗДАНИЕ -->
     <section class="screen" data-screen="create">
       <div class="screen-inner">
@@ -404,6 +577,10 @@
     <button class="tab-item" data-screen-target="rank" data-tab="rank">
       <div class="tab-icon">🏆</div>
       <div class="tab-label">Ранг</div>
+    </button>
+    <button class="tab-item" data-screen-target="profile" data-tab="profile">
+      <div class="tab-icon">⚙️</div>
+      <div class="tab-label">Профиль</div>
     </button>
   </nav>
 </div>

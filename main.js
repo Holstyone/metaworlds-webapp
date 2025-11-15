@@ -17,6 +17,25 @@ tg.ready();
 }
 
   // ========= СОСТОЯНИЕ МИРА =========
+  const defaultProfileSettings = {
+    displayName: "Страж эпохи",
+    motto: "Синхронизируйся с бесконечностью",
+    avatarEmoji: "🧙‍♂️",
+    timezone: "Europe/Moscow",
+    reminderHour: "18:00",
+    theme: "system",
+    notifications: {
+      energy: true,
+      missions: true,
+      battles: false,
+    },
+    privacy: {
+      showRating: true,
+      showArchetype: true,
+      allowChallenges: true,
+    },
+  };
+
   const worldState = {
     name: "Magotech Grad",
     level: 7,
@@ -54,8 +73,9 @@ tg.ready();
         used: false,
       },
     ],
-    archetype: null, // "tech" | "chaos" | "harmony"
-    isCreated: false, // мир создан или ещё нет
+    archetype: null,     // "tech" | "chaos" | "harmony"
+    isCreated: false,    // мир создан или ещё нет
+    profile: { ...defaultProfileSettings },
   };
 
   // ========= ШАБЛОНЫ МИССИЙ ДНЯ =========
@@ -124,6 +144,34 @@ tg.ready();
       ],
     },
   ];
+
+  const timezoneLabels = {
+    "Europe/Moscow": "UTC+3 (Москва)",
+    "Europe/Kaliningrad": "UTC+2 (Калининград)",
+    "Asia/Yekaterinburg": "UTC+5 (Екатеринбург)",
+    "Asia/Almaty": "UTC+6 (Алматы)",
+    "Asia/Vladivostok": "UTC+10 (Владивосток)",
+  };
+
+  function applyProfileDefaults() {
+    const current = worldState.profile || {};
+    const notifications = {
+      ...defaultProfileSettings.notifications,
+      ...(current.notifications || {}),
+    };
+    const privacy = {
+      ...defaultProfileSettings.privacy,
+      ...(current.privacy || {}),
+    };
+    worldState.profile = {
+      ...defaultProfileSettings,
+      ...current,
+      notifications,
+      privacy,
+    };
+  }
+
+  applyProfileDefaults();
 
   // ========= ВСПОМОГАТЕЛЬНОЕ =========
 
@@ -220,6 +268,31 @@ worldState.rankTop = playerRanking.position;
     empty: document.getElementById("changelogEmpty"),
   };
   let changelogExpanded = false;
+
+  const profileEls = {
+    displayName: document.getElementById("profileDisplayName"),
+    motto: document.getElementById("profileMotto"),
+    timezone: document.getElementById("profileTimezone"),
+    reminder: document.getElementById("profileReminder"),
+    theme: document.getElementById("profileTheme"),
+    avatarButtons: document.querySelectorAll("[data-avatar-option]"),
+    notifEnergy: document.getElementById("notifEnergy"),
+    notifMissions: document.getElementById("notifMissions"),
+    notifBattles: document.getElementById("notifBattles"),
+    privacyRating: document.getElementById("privacyRating"),
+    privacyArchetype: document.getElementById("privacyArchetype"),
+    privacyChallenges: document.getElementById("privacyChallenges"),
+    saveBtn: document.getElementById("btnSaveProfile"),
+    status: document.getElementById("profileSaveStatus"),
+    previewAvatar: document.getElementById("profilePreviewAvatar"),
+    previewName: document.getElementById("profilePreviewName"),
+    previewMotto: document.getElementById("profilePreviewMotto"),
+    previewTimezone: document.getElementById("profilePreviewTimezone"),
+    previewReminder: document.getElementById("profilePreviewReminder"),
+  };
+  let profileAutoSaveTimer = null;
+  let profileStatusTimer = null;
+  let profileInitialized = false;
 
   function formatJson(value) {
     try {
@@ -336,6 +409,229 @@ worldState.rankTop = playerRanking.position;
   updateInspectorLastSnapshot();
   updateInspectorStoredState(null);
 
+  function setProfileStatus(text, variant = "muted") {
+    if (!profileEls.status) return;
+    profileEls.status.textContent = text;
+    if (variant === "muted") {
+      profileEls.status.removeAttribute("data-variant");
+    } else {
+      profileEls.status.dataset.variant = variant;
+    }
+  }
+
+  function setAvatarSelection(value) {
+    profileEls.avatarButtons?.forEach((btn) => {
+      btn.classList.toggle("selected", btn.dataset.avatarOption === value);
+    });
+  }
+
+  function getTimezoneText(value) {
+    const resolved = value || defaultProfileSettings.timezone;
+    return timezoneLabels[resolved] || resolved;
+  }
+
+  function updateHeroProfileLine() {
+    const profile = worldState.profile || defaultProfileSettings;
+    const pilotNameEl = document.getElementById("pilotCallsign");
+    const pilotMottoEl = document.getElementById("pilotMotto");
+    const heroAvatarEl = document.getElementById("heroAvatar");
+    if (pilotNameEl) {
+      pilotNameEl.textContent = profile.displayName || defaultProfileSettings.displayName;
+    }
+    if (pilotMottoEl) {
+      pilotMottoEl.textContent = profile.motto || "—";
+    }
+    if (heroAvatarEl) {
+      heroAvatarEl.textContent = profile.avatarEmoji || defaultProfileSettings.avatarEmoji;
+    }
+  }
+
+  function updateProfilePreview() {
+    const profile = worldState.profile || defaultProfileSettings;
+    if (profileEls.previewAvatar) {
+      profileEls.previewAvatar.textContent = profile.avatarEmoji || defaultProfileSettings.avatarEmoji;
+    }
+    if (profileEls.previewName) {
+      profileEls.previewName.textContent = profile.displayName || defaultProfileSettings.displayName;
+    }
+    if (profileEls.previewMotto) {
+      profileEls.previewMotto.textContent = profile.motto || "Добавь девиз, чтобы вдохновлять союзников";
+    }
+    if (profileEls.previewTimezone) {
+      profileEls.previewTimezone.textContent = getTimezoneText(profile.timezone);
+    }
+    if (profileEls.previewReminder) {
+      profileEls.previewReminder.textContent = profile.reminderHour || defaultProfileSettings.reminderHour;
+    }
+    updateHeroProfileLine();
+  }
+
+  function hydrateProfileForm() {
+    const profile = worldState.profile || defaultProfileSettings;
+    if (profileEls.displayName) {
+      profileEls.displayName.value = profile.displayName || "";
+    }
+    if (profileEls.motto) {
+      profileEls.motto.value = profile.motto || "";
+    }
+    if (profileEls.timezone) {
+      profileEls.timezone.value = profile.timezone || defaultProfileSettings.timezone;
+    }
+    if (profileEls.reminder) {
+      profileEls.reminder.value = profile.reminderHour || defaultProfileSettings.reminderHour;
+    }
+    if (profileEls.theme) {
+      profileEls.theme.value = profile.theme || "system";
+    }
+    if (profileEls.notifEnergy) {
+      profileEls.notifEnergy.checked = Boolean(profile.notifications?.energy);
+    }
+    if (profileEls.notifMissions) {
+      profileEls.notifMissions.checked = Boolean(profile.notifications?.missions);
+    }
+    if (profileEls.notifBattles) {
+      profileEls.notifBattles.checked = Boolean(profile.notifications?.battles);
+    }
+    if (profileEls.privacyRating) {
+      profileEls.privacyRating.checked = Boolean(profile.privacy?.showRating);
+    }
+    if (profileEls.privacyArchetype) {
+      profileEls.privacyArchetype.checked = Boolean(profile.privacy?.showArchetype);
+    }
+    if (profileEls.privacyChallenges) {
+      profileEls.privacyChallenges.checked = Boolean(profile.privacy?.allowChallenges);
+    }
+    setAvatarSelection(profile.avatarEmoji || defaultProfileSettings.avatarEmoji);
+  }
+
+  function applyThemePreference(theme) {
+    const root = document.documentElement;
+    if (!root) return;
+    if (!theme || theme === "system") {
+      root.removeAttribute("data-player-theme");
+    } else {
+      root.setAttribute("data-player-theme", theme);
+    }
+  }
+
+  function saveProfileSettings(reason = "profile_edit") {
+    if (!profileEls.status) {
+      return saveWorldState(reason);
+    }
+    setProfileStatus("Сохраняю…", "progress");
+    profileEls.saveBtn?.setAttribute("disabled", "disabled");
+    return saveWorldState(reason)
+      .then(() => {
+        setProfileStatus("Настройки сохранены", "success");
+      })
+      .catch((err) => {
+        console.warn("Профиль не сохранился", err);
+        setProfileStatus("Не удалось сохранить", "error");
+      })
+      .finally(() => {
+        profileEls.saveBtn?.removeAttribute("disabled");
+        if (profileStatusTimer) {
+          clearTimeout(profileStatusTimer);
+        }
+        profileStatusTimer = setTimeout(() => {
+          setProfileStatus("Изменения сохраняются автоматически");
+        }, 2600);
+      });
+  }
+
+  function requestProfileAutoSave(reason = "profile_edit") {
+    if (profileAutoSaveTimer) {
+      clearTimeout(profileAutoSaveTimer);
+    }
+    profileAutoSaveTimer = setTimeout(() => {
+      profileAutoSaveTimer = null;
+      saveProfileSettings(reason);
+    }, 700);
+  }
+
+  function initProfileSettings() {
+    if (profileInitialized) return;
+    profileInitialized = true;
+    setProfileStatus("Изменения сохраняются автоматически");
+
+    profileEls.avatarButtons?.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        worldState.profile.avatarEmoji = btn.dataset.avatarOption;
+        setAvatarSelection(worldState.profile.avatarEmoji);
+        updateProfilePreview();
+        requestProfileAutoSave("profile_avatar");
+        tg?.HapticFeedback?.selectionChanged?.();
+      });
+    });
+
+    profileEls.displayName?.addEventListener("input", (event) => {
+      worldState.profile.displayName = event.target.value;
+      updateProfilePreview();
+      requestProfileAutoSave();
+    });
+
+    profileEls.motto?.addEventListener("input", (event) => {
+      worldState.profile.motto = event.target.value;
+      updateProfilePreview();
+      requestProfileAutoSave();
+    });
+
+    profileEls.timezone?.addEventListener("change", (event) => {
+      worldState.profile.timezone = event.target.value;
+      updateProfilePreview();
+      requestProfileAutoSave("profile_timezone");
+    });
+
+    profileEls.reminder?.addEventListener("change", (event) => {
+      worldState.profile.reminderHour = event.target.value;
+      updateProfilePreview();
+      requestProfileAutoSave("profile_reminder");
+    });
+
+    profileEls.theme?.addEventListener("change", (event) => {
+      worldState.profile.theme = event.target.value;
+      applyThemePreference(worldState.profile.theme);
+      requestProfileAutoSave("profile_theme");
+    });
+
+    profileEls.notifEnergy?.addEventListener("change", (event) => {
+      worldState.profile.notifications.energy = event.target.checked;
+      requestProfileAutoSave("profile_notifications");
+    });
+    profileEls.notifMissions?.addEventListener("change", (event) => {
+      worldState.profile.notifications.missions = event.target.checked;
+      requestProfileAutoSave("profile_notifications");
+    });
+    profileEls.notifBattles?.addEventListener("change", (event) => {
+      worldState.profile.notifications.battles = event.target.checked;
+      requestProfileAutoSave("profile_notifications");
+    });
+
+    profileEls.privacyRating?.addEventListener("change", (event) => {
+      worldState.profile.privacy.showRating = event.target.checked;
+      requestProfileAutoSave("profile_privacy");
+    });
+    profileEls.privacyArchetype?.addEventListener("change", (event) => {
+      worldState.profile.privacy.showArchetype = event.target.checked;
+      requestProfileAutoSave("profile_privacy");
+    });
+    profileEls.privacyChallenges?.addEventListener("change", (event) => {
+      worldState.profile.privacy.allowChallenges = event.target.checked;
+      requestProfileAutoSave("profile_privacy");
+    });
+
+    profileEls.saveBtn?.addEventListener("click", () => {
+      saveProfileSettings("profile_manual");
+    });
+  }
+
+  function refreshProfileUI() {
+    applyProfileDefaults();
+    hydrateProfileForm();
+    updateProfilePreview();
+    applyThemePreference(worldState.profile?.theme);
+  }
+
   function renderChangelog(entries) {
     if (!changelogEls.list) return;
     changelogEls.list.innerHTML = "";
@@ -408,6 +704,8 @@ worldState.rankTop = playerRanking.position;
 
   renderChangelog(releaseNotes);
   initChangelogControls();
+  initProfileSettings();
+  refreshProfileUI();
 
   function serializeState() {
     return JSON.parse(JSON.stringify(worldState));
@@ -625,6 +923,8 @@ return loadedFromServer;
       // если разметка ещё не загрузилась — просто выходим
       return;
     }
+
+    updateHeroProfileLine();
 
     byId("heroName").textContent = worldState.name;
     byId("heroLevel").textContent = worldState.level;
@@ -1025,6 +1325,7 @@ worldState.order = 100 - worldState.chaos;
 
   (async () => {
     await loadStateFromServer();
+    refreshProfileUI();
     refreshInspectorStorage();
     scheduleStatePush("boot");
 
