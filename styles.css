@@ -74,7 +74,7 @@ body {
 }
 
 .screen {
-  flex: 1;
+  flex: auto;
   display: none;
   flex-direction: column;
   min-height: 0;
