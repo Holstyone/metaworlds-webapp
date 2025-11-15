@@ -111,6 +111,47 @@
         </div>
       </div>
 
+      <div class="inspector-card" id="dataInspectorCard">
+        <div class="inspector-header">
+          <div>
+            <div class="inspector-title">Мониторинг данных</div>
+            <div class="inspector-subtitle">
+              Посмотри, что прямо сейчас хранится локально и уходит боту
+            </div>
+          </div>
+          <button class="inspector-toggle" id="btnToggleInspector" type="button">
+            Показать
+          </button>
+        </div>
+
+        <div class="inspector-panel" id="dataInspectorPanel">
+          <div class="inspector-controls">
+            <button class="inspector-refresh" id="btnRefreshInspector" type="button">
+              🔄 Обновить снимок из хранилища
+            </button>
+            <div class="inspector-status" id="inspectorStatus"></div>
+          </div>
+
+          <div class="inspector-section">
+            <div class="inspector-label">Текущее состояние фронтенда</div>
+            <pre class="inspector-pre" id="inspectorCurrentState">—</pre>
+          </div>
+
+          <div class="inspector-section">
+            <div class="inspector-label">Последний отправленный снапшот боту</div>
+            <pre class="inspector-pre" id="inspectorLastSnapshot">—</pre>
+          </div>
+
+          <div class="inspector-section">
+            <div class="inspector-label">
+              Что лежит в хранилище
+              <span class="inspector-source" id="inspectorStorageSource">—</span>
+            </div>
+            <pre class="inspector-pre" id="inspectorStoredState">—</pre>
+          </div>
+        </div>
+      </div>
+
       <div class="spacer"></div>
       <div class="bottom-caption">
         MetaWorlds • управляй своим миром и готовься к битве.
@@ -223,11 +264,41 @@
     </section>
   </main>
 
-  <section class="screen" data-screen="create">
+    <section class="screen" data-screen="create">
   <div class="screen-inner">
     <div class="screen-header">
       <div class="screen-title">Создание мира</div>
       <div class="screen-subtitle">Выбери архетип и дай название своей вселенной</div>
+    </div>
+
+    <div class="create-steps" aria-label="Памятка по созданию мира">
+      <div class="create-step">
+        <div class="create-step-number">1</div>
+        <div>
+          <div class="create-step-title">Определи архетип</div>
+          <div class="create-step-desc">
+            Нажми на карту, чтобы понять сильные и слабые стороны будущего мира.
+          </div>
+        </div>
+      </div>
+      <div class="create-step">
+        <div class="create-step-number">2</div>
+        <div>
+          <div class="create-step-title">Назови вселенную</div>
+          <div class="create-step-desc">
+            Придумай короткое имя — оно попадёт в статистику и список миров друзей.
+          </div>
+        </div>
+      </div>
+      <div class="create-step">
+        <div class="create-step-number">3</div>
+        <div>
+          <div class="create-step-title">Подтверди создание</div>
+          <div class="create-step-desc">
+            Нажми «Создать мир», чтобы разблокировать вкладки «Мир», «Бой» и миссии.
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="archetype-grid">
