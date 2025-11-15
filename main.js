@@ -1009,7 +1009,7 @@ rankRatingSmall.textContent = (playerRanking.rating || 1200).toLocaleString(
     updateInspectorCurrentState();
   }
 
-    // ========= СОЗДАНИЕ МИРА =========
+  // ========= СОЗДАНИЕ МИРА =========
   const archCards = document.querySelectorAll(".archetype-card");
   const worldNameInput = document.getElementById("worldNameInput");
   const btnCreateWorld = document.getElementById("btnCreateWorld");
@@ -1055,7 +1055,6 @@ rankRatingSmall.textContent = (playerRanking.rating || 1200).toLocaleString(
     });
   }
 
-
   // ========= РОУТЕР ПО ЭКРАНАМ =========
 
   const screens = document.querySelectorAll(".screen");
@@ -1098,12 +1097,14 @@ rankRatingSmall.textContent = (playerRanking.rating || 1200).toLocaleString(
       }</span>
         </div>
         <div class="mission-footer">
-          <span class="mission-status">${m.done ? "✅ Выполнено" : "Доступно"}</span>
+          <span class="mission-status">${
+            m.done ? "✅ Выполнено" : "Доступно"
+          }</span>
           ${
             m.done
               ? ""
               : `<button class="mission-btn" data-mission-id="${m.id}">
-                   Выполнить
+                  Выполнить
                  </button>`
           }
         </div>
@@ -1191,12 +1192,14 @@ worldState.order = 100 - worldState.chaos;
           <span>💰 Стоимость: ${b.costCoins.toLocaleString("ru-RU")}</span>
         </div>
         <div class="mission-footer">
-          <span class="mission-status">${b.used ? "✅ Использован" : "Доступен"}</span>
+          <span class="mission-status">${
+            b.used ? "✅ Использован" : "Доступен"
+          }</span>
           ${
             b.used
               ? ""
               : `<button class="mission-btn" data-boost-id="${b.id}">
-                   Активировать
+                  Активировать
                  </button>`
           }
         </div>
@@ -1583,3 +1586,30 @@ showScreen("create");
   })();
 }); 
 
+    scheduleStatePush(reason || "save");
+  } catch (err) {
+    console.warn("saveWorldState error", err);
+  }
+}
+
+ //
+
+  (async () => {
+    await loadStateFromServer();
+    refreshInspectorStorage();
+    scheduleStatePush("boot");
+
+if (worldState.isCreated) {
+if (!worldState.missions || worldState.missions.length === 0) {
+generateDailyMissions();
+}
+renderWorld();
+renderMissions();
+renderBoosts();
+showScreen("home");
+} else {
+renderWorld();
+showScreen("create");
+}
+  })();
+});
