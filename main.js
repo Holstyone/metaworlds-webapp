@@ -1,12 +1,63 @@
 window.addEventListener("load", () => {
-	const STORAGE_KEY = "metaworlds_state_v1";
-	const tg = window.Telegram?.WebApp;
-  if (tg) {
-    tg.expand();
-    tg.ready();
-  }
+const STORAGE_KEY = "metaworlds_state_v1";
+const tg = window.Telegram?.WebApp;
+const API_BASE = "";
+const playerId = tg?.initDataUnsafe?.user?.id
+  ? `tg_${tg.initDataUnsafe.user.id}`
+  : "local-debug";
+let playerRanking = {
+  rating: 1200,
+  position: 0,
+  wins: 0,
+  losses: 0,
+};
+const defaultOpponent = {
+  userId: "bot_placeholder",
+  codename: "HASTER100",
+  avatar: "🐕‍🦺",
+  worldName: "Случайный противник",
+  archetype: "tech",
+  rating: 1240,
+  wins: 6,
+  losses: 3,
+  level: 9,
+  energy: 920,
+  regen: 11,
+  power: 32,
+  isBot: true,
+};
+let activeOpponent = null;
+const matchmakingState = {
+  searching: false,
+  timer: null,
+  etaTimer: null,
+  etaLeft: 0,
+};
+if (tg) {
+tg.expand();
+tg.ready();
+}
 
   // ========= СОСТОЯНИЕ МИРА =========
+  const defaultProfileSettings = {
+    displayName: "Страж эпохи",
+    motto: "Синхронизируйся с бесконечностью",
+    avatarEmoji: "🧙‍♂️",
+    timezone: "Europe/Moscow",
+    reminderHour: "18:00",
+    theme: "system",
+    notifications: {
+      energy: true,
+      missions: true,
+      battles: false,
+    },
+    privacy: {
+      showRating: true,
+      showArchetype: true,
+      allowChallenges: true,
+    },
+  };
+
   const worldState = {
     name: "Magotech Grad",
     level: 7,
@@ -46,6 +97,7 @@ window.addEventListener("load", () => {
     ],
     archetype: null,     // "tech" | "chaos" | "harmony"
     isCreated: false,    // мир создан или ещё нет
+    profile: { ...defaultProfileSettings },
   };
 
   // ========= ШАБЛОНЫ МИССИЙ ДНЯ =========
@@ -83,6 +135,65 @@ window.addEventListener("load", () => {
       baseEnergy: 130,
     },
   ];
+
+  const releaseNotes = [
+    {
+      version: "0.9.0",
+      date: "18.03.2024",
+      title: "Серверная синхронизация и рейтинг",
+      highlights: [
+        "WebApp теперь грузит и сохраняет мир через Node.js API, который хранит ежедневные миссии и путешествия.",
+        "profit/hour продолжает работать офлайн: сервер копит монеты и возвращает их при следующем входе.",
+        "Рейтинг и позиция TOP подтягиваются прямо с сервера после боёв.",
+      ],
+    },
+    {
+      version: "0.8.6",
+      date: "16.03.2024",
+      title: "Мониторинг данных",
+      highlights: [
+        "На главном экране появилась панель инспектора с текущим состоянием, последним снапшотом и содержимым хранилищ.",
+        "Можно вручную обновить снимок и сразу увидеть, что именно отправляется боту.",
+      ],
+    },
+    {
+      version: "0.8.0",
+      date: "14.03.2024",
+      title: "Базовый цикл мира",
+      highlights: [
+        "Добавлены архетипы мира, генерация миссий дня и полноценный боевой экран.",
+        "Состояние сохраняется локально, в CloudStorage и синхронизируется с ботом через tg.sendData.",
+      ],
+    },
+  ];
+
+  const timezoneLabels = {
+    "Europe/Moscow": "UTC+3 (Москва)",
+    "Europe/Kaliningrad": "UTC+2 (Калининград)",
+    "Asia/Yekaterinburg": "UTC+5 (Екатеринбург)",
+    "Asia/Almaty": "UTC+6 (Алматы)",
+    "Asia/Vladivostok": "UTC+10 (Владивосток)",
+  };
+
+  function applyProfileDefaults() {
+    const current = worldState.profile || {};
+    const notifications = {
+      ...defaultProfileSettings.notifications,
+      ...(current.notifications || {}),
+    };
+    const privacy = {
+      ...defaultProfileSettings.privacy,
+      ...(current.privacy || {}),
+    };
+    worldState.profile = {
+      ...defaultProfileSettings,
+      ...current,
+      notifications,
+      privacy,
+    };
+  }
+
+  applyProfileDefaults();
 
   // ========= ВСПОМОГАТЕЛЬНОЕ =========
 
@@ -123,49 +234,681 @@ window.addEventListener("load", () => {
     worldState.dailyQuestsTotal = worldState.missions.length;
   }
 
-  function syncWithBot(eventType, extra) {
+const hasCloudStorage = Boolean(tg?.CloudStorage);
+
+function getPlayerId() {
+return playerId;
+}
+
+async function postJson(url, body) {
+const endpoint = url.startsWith("http") ? url : `${API_BASE}${url}`;
+const resp = await fetch(endpoint, {
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+},
+body: JSON.stringify(body),
+credentials: "same-origin",
+});
+if (!resp.ok) {
+throw new Error(`Request failed with ${resp.status}`);
+}
+return resp.json();
+}
+
+let lastSyncedPayload = null;
+
+function updatePlayerRanking(ranking) {
+if (!ranking) return;
+playerRanking = {
+rating: ranking.rating ?? playerRanking.rating,
+position: ranking.position ?? playerRanking.position,
+wins: ranking.wins ?? playerRanking.wins,
+losses: ranking.losses ?? playerRanking.losses,
+};
+if (playerRanking.position) {
+worldState.rankTop = playerRanking.position;
+}
+}
+
+  const inspectorEls = {
+    card: document.getElementById("dataInspectorCard"),
+    toggle: document.getElementById("btnToggleInspector"),
+    refresh: document.getElementById("btnRefreshInspector"),
+    status: document.getElementById("inspectorStatus"),
+    current: document.getElementById("inspectorCurrentState"),
+    last: document.getElementById("inspectorLastSnapshot"),
+    stored: document.getElementById("inspectorStoredState"),
+    source: document.getElementById("inspectorStorageSource"),
+  };
+
+  const changelogEls = {
+    card: document.getElementById("changelogCard"),
+    toggle: document.getElementById("btnToggleChangelog"),
+    panel: document.getElementById("changelogPanel"),
+    list: document.getElementById("changelogList"),
+    empty: document.getElementById("changelogEmpty"),
+  };
+  let changelogExpanded = false;
+
+  const profileEls = {
+    displayName: document.getElementById("profileDisplayName"),
+    motto: document.getElementById("profileMotto"),
+    timezone: document.getElementById("profileTimezone"),
+    reminder: document.getElementById("profileReminder"),
+    theme: document.getElementById("profileTheme"),
+    avatarButtons: document.querySelectorAll("[data-avatar-option]"),
+    notifEnergy: document.getElementById("notifEnergy"),
+    notifMissions: document.getElementById("notifMissions"),
+    notifBattles: document.getElementById("notifBattles"),
+    privacyRating: document.getElementById("privacyRating"),
+    privacyArchetype: document.getElementById("privacyArchetype"),
+    privacyChallenges: document.getElementById("privacyChallenges"),
+    saveBtn: document.getElementById("btnSaveProfile"),
+    status: document.getElementById("profileSaveStatus"),
+    previewAvatar: document.getElementById("profilePreviewAvatar"),
+    previewName: document.getElementById("profilePreviewName"),
+    previewMotto: document.getElementById("profilePreviewMotto"),
+    previewTimezone: document.getElementById("profilePreviewTimezone"),
+    previewReminder: document.getElementById("profilePreviewReminder"),
+  };
+  let profileAutoSaveTimer = null;
+  let profileStatusTimer = null;
+  let profileInitialized = false;
+
+  function formatJson(value) {
+    try {
+      if (typeof value === "string") {
+        return JSON.stringify(JSON.parse(value), null, 2);
+      }
+      return JSON.stringify(value, null, 2);
+    } catch (err) {
+      return typeof value === "string" ? value : String(value);
+    }
+  }
+
+  function setInspectorStatus(text) {
+    if (inspectorEls.status) {
+      inspectorEls.status.textContent = text || "";
+    }
+  }
+
+  function updateInspectorCurrentState() {
+    if (!inspectorEls.current) return;
+    inspectorEls.current.textContent = formatJson(worldState);
+  }
+
+  function updateInspectorLastSnapshot() {
+    if (!inspectorEls.last) return;
+    if (!lastSyncedPayload) {
+      inspectorEls.last.textContent = "Снапшоты ещё не отправлялись";
+      return;
+    }
+    inspectorEls.last.textContent = formatJson(lastSyncedPayload);
+  }
+
+  function updateInspectorStoredState(raw, sourceLabel = "—") {
+    if (!inspectorEls.stored) return;
+    if (!raw) {
+      inspectorEls.stored.textContent = "Сохранённых данных пока нет";
+      if (inspectorEls.source) inspectorEls.source.textContent = "—";
+      return;
+    }
+    inspectorEls.stored.textContent = formatJson(raw);
+    if (inspectorEls.source) inspectorEls.source.textContent = sourceLabel;
+  }
+
+  async function readStoredStateSnapshot() {
+    let raw = null;
+    let source = null;
+    if (hasCloudStorage) {
+      try {
+        raw = await cloudGetItem(STORAGE_KEY);
+        if (raw) {
+          source = "Telegram CloudStorage";
+        }
+      } catch (err) {
+        console.warn("CloudStorage read failed", err);
+      }
+    }
+
+    if (!raw) {
+      try {
+        raw = loadFromLocalStorage();
+        if (raw) {
+          source = "localStorage";
+        }
+      } catch (err) {
+        console.warn("localStorage read failed", err);
+      }
+    }
+
+    return { raw, source };
+  }
+
+  async function refreshInspectorStorage() {
+    if (!inspectorEls.stored) return;
+    try {
+      setInspectorStatus("Обновляю…");
+      inspectorEls.refresh?.setAttribute("disabled", "disabled");
+      const { raw, source } = await readStoredStateSnapshot();
+      if (raw) {
+        updateInspectorStoredState(raw, source || "localStorage");
+      } else {
+        inspectorEls.stored.textContent = "В хранилище данных нет";
+        if (inspectorEls.source) inspectorEls.source.textContent = "—";
+      }
+    } catch (err) {
+      inspectorEls.stored.textContent = `Ошибка чтения: ${err.message || err}`;
+      if (inspectorEls.source) inspectorEls.source.textContent = "—";
+    } finally {
+      inspectorEls.refresh?.removeAttribute("disabled");
+      setInspectorStatus("");
+    }
+  }
+
+  function initInspectorControls() {
+    if (inspectorEls.toggle && inspectorEls.card) {
+      inspectorEls.toggle.addEventListener("click", () => {
+        const open = inspectorEls.card.classList.toggle("inspector-open");
+        inspectorEls.toggle.textContent = open ? "Свернуть" : "Показать";
+        if (open) {
+          updateInspectorCurrentState();
+          updateInspectorLastSnapshot();
+        }
+      });
+    }
+
+    if (inspectorEls.refresh) {
+      inspectorEls.refresh.addEventListener("click", () => {
+        refreshInspectorStorage();
+      });
+    }
+  }
+
+  initInspectorControls();
+  updateInspectorCurrentState();
+  updateInspectorLastSnapshot();
+  updateInspectorStoredState(null);
+
+  function setProfileStatus(text, variant = "muted") {
+    if (!profileEls.status) return;
+    profileEls.status.textContent = text;
+    if (variant === "muted") {
+      profileEls.status.removeAttribute("data-variant");
+    } else {
+      profileEls.status.dataset.variant = variant;
+    }
+  }
+
+  function setAvatarSelection(value) {
+    profileEls.avatarButtons?.forEach((btn) => {
+      btn.classList.toggle("selected", btn.dataset.avatarOption === value);
+    });
+  }
+
+  function getTimezoneText(value) {
+    const resolved = value || defaultProfileSettings.timezone;
+    return timezoneLabels[resolved] || resolved;
+  }
+
+  function updateHeroProfileLine() {
+    const profile = worldState.profile || defaultProfileSettings;
+    const pilotNameEl = document.getElementById("pilotCallsign");
+    const pilotMottoEl = document.getElementById("pilotMotto");
+    const heroAvatarEl = document.getElementById("heroAvatar");
+    if (pilotNameEl) {
+      pilotNameEl.textContent = profile.displayName || defaultProfileSettings.displayName;
+    }
+    if (pilotMottoEl) {
+      pilotMottoEl.textContent = profile.motto || "—";
+    }
+    if (heroAvatarEl) {
+      heroAvatarEl.textContent = profile.avatarEmoji || defaultProfileSettings.avatarEmoji;
+    }
+  }
+
+  function updateProfilePreview() {
+    const profile = worldState.profile || defaultProfileSettings;
+    if (profileEls.previewAvatar) {
+      profileEls.previewAvatar.textContent = profile.avatarEmoji || defaultProfileSettings.avatarEmoji;
+    }
+    if (profileEls.previewName) {
+      profileEls.previewName.textContent = profile.displayName || defaultProfileSettings.displayName;
+    }
+    if (profileEls.previewMotto) {
+      profileEls.previewMotto.textContent = profile.motto || "Добавь девиз, чтобы вдохновлять союзников";
+    }
+    if (profileEls.previewTimezone) {
+      profileEls.previewTimezone.textContent = getTimezoneText(profile.timezone);
+    }
+    if (profileEls.previewReminder) {
+      profileEls.previewReminder.textContent = profile.reminderHour || defaultProfileSettings.reminderHour;
+    }
+    updateHeroProfileLine();
+  }
+
+  function hydrateProfileForm() {
+    const profile = worldState.profile || defaultProfileSettings;
+    if (profileEls.displayName) {
+      profileEls.displayName.value = profile.displayName || "";
+    }
+    if (profileEls.motto) {
+      profileEls.motto.value = profile.motto || "";
+    }
+    if (profileEls.timezone) {
+      profileEls.timezone.value = profile.timezone || defaultProfileSettings.timezone;
+    }
+    if (profileEls.reminder) {
+      profileEls.reminder.value = profile.reminderHour || defaultProfileSettings.reminderHour;
+    }
+    if (profileEls.theme) {
+      profileEls.theme.value = profile.theme || "system";
+    }
+    if (profileEls.notifEnergy) {
+      profileEls.notifEnergy.checked = Boolean(profile.notifications?.energy);
+    }
+    if (profileEls.notifMissions) {
+      profileEls.notifMissions.checked = Boolean(profile.notifications?.missions);
+    }
+    if (profileEls.notifBattles) {
+      profileEls.notifBattles.checked = Boolean(profile.notifications?.battles);
+    }
+    if (profileEls.privacyRating) {
+      profileEls.privacyRating.checked = Boolean(profile.privacy?.showRating);
+    }
+    if (profileEls.privacyArchetype) {
+      profileEls.privacyArchetype.checked = Boolean(profile.privacy?.showArchetype);
+    }
+    if (profileEls.privacyChallenges) {
+      profileEls.privacyChallenges.checked = Boolean(profile.privacy?.allowChallenges);
+    }
+    setAvatarSelection(profile.avatarEmoji || defaultProfileSettings.avatarEmoji);
+  }
+
+  function applyThemePreference(theme) {
+    const root = document.documentElement;
+    if (!root) return;
+    if (!theme || theme === "system") {
+      root.removeAttribute("data-player-theme");
+    } else {
+      root.setAttribute("data-player-theme", theme);
+    }
+  }
+
+  function saveProfileSettings(reason = "profile_edit") {
+    if (!profileEls.status) {
+      return saveWorldState(reason);
+    }
+    setProfileStatus("Сохраняю…", "progress");
+    profileEls.saveBtn?.setAttribute("disabled", "disabled");
+    return saveWorldState(reason)
+      .then(() => {
+        setProfileStatus("Настройки сохранены", "success");
+      })
+      .catch((err) => {
+        console.warn("Профиль не сохранился", err);
+        setProfileStatus("Не удалось сохранить", "error");
+      })
+      .finally(() => {
+        profileEls.saveBtn?.removeAttribute("disabled");
+        if (profileStatusTimer) {
+          clearTimeout(profileStatusTimer);
+        }
+        profileStatusTimer = setTimeout(() => {
+          setProfileStatus("Изменения сохраняются автоматически");
+        }, 2600);
+      });
+  }
+
+  function requestProfileAutoSave(reason = "profile_edit") {
+    if (profileAutoSaveTimer) {
+      clearTimeout(profileAutoSaveTimer);
+    }
+    profileAutoSaveTimer = setTimeout(() => {
+      profileAutoSaveTimer = null;
+      saveProfileSettings(reason);
+    }, 700);
+  }
+
+  function initProfileSettings() {
+    if (profileInitialized) return;
+    profileInitialized = true;
+    setProfileStatus("Изменения сохраняются автоматически");
+
+    profileEls.avatarButtons?.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        worldState.profile.avatarEmoji = btn.dataset.avatarOption;
+        setAvatarSelection(worldState.profile.avatarEmoji);
+        updateProfilePreview();
+        requestProfileAutoSave("profile_avatar");
+        tg?.HapticFeedback?.selectionChanged?.();
+      });
+    });
+
+    profileEls.displayName?.addEventListener("input", (event) => {
+      worldState.profile.displayName = event.target.value;
+      updateProfilePreview();
+      requestProfileAutoSave();
+    });
+
+    profileEls.motto?.addEventListener("input", (event) => {
+      worldState.profile.motto = event.target.value;
+      updateProfilePreview();
+      requestProfileAutoSave();
+    });
+
+    profileEls.timezone?.addEventListener("change", (event) => {
+      worldState.profile.timezone = event.target.value;
+      updateProfilePreview();
+      requestProfileAutoSave("profile_timezone");
+    });
+
+    profileEls.reminder?.addEventListener("change", (event) => {
+      worldState.profile.reminderHour = event.target.value;
+      updateProfilePreview();
+      requestProfileAutoSave("profile_reminder");
+    });
+
+    profileEls.theme?.addEventListener("change", (event) => {
+      worldState.profile.theme = event.target.value;
+      applyThemePreference(worldState.profile.theme);
+      requestProfileAutoSave("profile_theme");
+    });
+
+    profileEls.notifEnergy?.addEventListener("change", (event) => {
+      worldState.profile.notifications.energy = event.target.checked;
+      requestProfileAutoSave("profile_notifications");
+    });
+    profileEls.notifMissions?.addEventListener("change", (event) => {
+      worldState.profile.notifications.missions = event.target.checked;
+      requestProfileAutoSave("profile_notifications");
+    });
+    profileEls.notifBattles?.addEventListener("change", (event) => {
+      worldState.profile.notifications.battles = event.target.checked;
+      requestProfileAutoSave("profile_notifications");
+    });
+
+    profileEls.privacyRating?.addEventListener("change", (event) => {
+      worldState.profile.privacy.showRating = event.target.checked;
+      requestProfileAutoSave("profile_privacy");
+    });
+    profileEls.privacyArchetype?.addEventListener("change", (event) => {
+      worldState.profile.privacy.showArchetype = event.target.checked;
+      requestProfileAutoSave("profile_privacy");
+    });
+    profileEls.privacyChallenges?.addEventListener("change", (event) => {
+      worldState.profile.privacy.allowChallenges = event.target.checked;
+      requestProfileAutoSave("profile_privacy");
+    });
+
+    profileEls.saveBtn?.addEventListener("click", () => {
+      saveProfileSettings("profile_manual");
+    });
+  }
+
+  function refreshProfileUI() {
+    applyProfileDefaults();
+    hydrateProfileForm();
+    updateProfilePreview();
+    applyThemePreference(worldState.profile?.theme);
+  }
+
+  function renderChangelog(entries) {
+    if (!changelogEls.list) return;
+    changelogEls.list.innerHTML = "";
+    if (!entries || !entries.length) {
+      if (changelogEls.empty) {
+        changelogEls.empty.style.display = "block";
+        changelogEls.empty.textContent = "Журнал пока пуст";
+      }
+      return;
+    }
+
+    if (changelogEls.empty) {
+      changelogEls.empty.style.display = "none";
+    }
+
+    entries.forEach((note) => {
+      const entry = document.createElement("article");
+      entry.className = "changelog-entry";
+
+      const meta = document.createElement("div");
+      meta.className = "changelog-meta";
+      const version = document.createElement("span");
+      version.className = "changelog-version";
+      version.textContent = note.version?.startsWith("v")
+        ? note.version
+        : `v${note.version}`;
+      const date = document.createElement("span");
+      date.className = "changelog-date";
+      date.textContent = note.date || "";
+      meta.appendChild(version);
+      meta.appendChild(date);
+
+      const title = document.createElement("div");
+      title.className = "changelog-entry-title";
+      title.textContent = note.title || "";
+
+      const list = document.createElement("ul");
+      list.className = "changelog-highlights";
+      (note.highlights || []).forEach((highlight) => {
+        const li = document.createElement("li");
+        li.textContent = highlight;
+        list.appendChild(li);
+      });
+
+      entry.appendChild(meta);
+      entry.appendChild(title);
+      entry.appendChild(list);
+      changelogEls.list.appendChild(entry);
+    });
+  }
+
+  function setChangelogExpanded(nextState) {
+    changelogExpanded = Boolean(nextState);
+    if (changelogEls.card) {
+      changelogEls.card.classList.toggle("changelog-open", changelogExpanded);
+    }
+    if (changelogEls.toggle) {
+      changelogEls.toggle.textContent = changelogExpanded ? "Свернуть" : "Показать";
+    }
+  }
+
+  function initChangelogControls() {
+    if (changelogEls.toggle) {
+      changelogEls.toggle.addEventListener("click", () => {
+        setChangelogExpanded(!changelogExpanded);
+      });
+    }
+    setChangelogExpanded(false);
+  }
+
+  renderChangelog(releaseNotes);
+  initChangelogControls();
+  initProfileSettings();
+  refreshProfileUI();
+
+  function serializeState() {
+    return JSON.parse(JSON.stringify(worldState));
+  }
+
+function syncWithBot(eventType, extra) {
+const payload = {
+type: eventType,
+world: {
+name: worldState.name,
+level: worldState.level,
+xp: worldState.xp,
+nextLevelXp: worldState.nextLevelXp,
+rankTop: worldState.rankTop,
+energyNow: worldState.energyNow,
+energyMax: worldState.energyMax,
+coins: worldState.coins,
+chaos: worldState.chaos,
+order: worldState.order,
+},
+state: serializeState(),
+extra: extra || null,
+timestamp: new Date().toISOString(),
+};
+lastSyncedPayload = payload;
+updateInspectorLastSnapshot();
+if (tg?.sendData) {
+try {
+tg.sendData(JSON.stringify(payload));
+} catch (err) {
+console.warn("sendData failed", err);
+}
+}
+sendEventToServer(eventType, extra);
+}
+
+function sendEventToServer(eventType, extra) {
+const userId = getPlayerId();
+if (!userId) return;
+postJson("/api/events", {
+userId,
+type: eventType,
+state: serializeState(),
+extra: extra || null,
+timestamp: new Date().toISOString(),
+}).catch((err) => {
+console.warn("Server event sync failed", err);
+});
+}
+
+  let botSyncTimer = null;
+  let pendingReason = null;
+  function scheduleStatePush(reason = "auto") {
     if (!tg || !tg.sendData) return;
-    const payload = {
-      type: eventType,
-      world: {
-        name: worldState.name,
-        level: worldState.level,
-        xp: worldState.xp,
-        nextLevelXp: worldState.nextLevelXp,
-        rankTop: worldState.rankTop,
-        energyNow: worldState.energyNow,
-        energyMax: worldState.energyMax,
-        coins: worldState.coins,
-        chaos: worldState.chaos,
-        order: worldState.order,
-      },
-      extra: extra || null,
-    };
-    tg.sendData(JSON.stringify(payload));
+    pendingReason = reason;
+    if (botSyncTimer) return;
+    botSyncTimer = setTimeout(() => {
+      botSyncTimer = null;
+      const extra = { reason: pendingReason };
+      pendingReason = null;
+      syncWithBot("state_snapshot", extra);
+    }, 350);
   }
 
-  async function saveStateToServer(reason = "") {
-    try {
-      const data = JSON.stringify(worldState);
-      localStorage.setItem(STORAGE_KEY, data);
-      console.log("Saved to localStorage:", reason);
-    } catch (e) {
-      console.warn("Save error:", e);
-    }
+  function saveToLocalStorage(data, reason) {
+    localStorage.setItem(STORAGE_KEY, data);
+    console.log("Saved to localStorage:", reason);
   }
 
-  async function loadStateFromServer() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const data = JSON.parse(raw);
-      // Аккуратно переносим поля в текущий worldState
-      Object.assign(worldState, data);
-      console.log("Loaded from localStorage");
-    } catch (e) {
-      console.warn("Load error:", e);
-    }
+  function loadFromLocalStorage() {
+    return localStorage.getItem(STORAGE_KEY);
   }
+
+  function cloudSetItem(key, value) {
+    return new Promise((resolve, reject) => {
+      tg.CloudStorage.setItem(key, value, (err, success) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(success);
+        }
+      });
+    });
+  }
+
+  function cloudGetItem(key) {
+    return new Promise((resolve, reject) => {
+      tg.CloudStorage.getItem(key, (err, value) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(value);
+        }
+      });
+    });
+  }
+
+async function saveWorldState(reason = "") {
+try {
+const data = JSON.stringify(worldState);
+saveToLocalStorage(data, reason);
+let storageLabel = "localStorage";
+if (hasCloudStorage) {
+try {
+await cloudSetItem(STORAGE_KEY, data);
+storageLabel = "Telegram CloudStorage + localStorage";
+console.log("Saved to Telegram CloudStorage:", reason);
+} catch (err) {
+console.warn("CloudStorage save failed", err);
+}
+}
+updateInspectorStoredState(data, storageLabel);
+const userId = getPlayerId();
+if (userId) {
+postJson("/api/world", {
+userId,
+state: serializeState(),
+reason: reason || null,
+timestamp: Date.now(),
+}).catch((err) => {
+console.warn("Server save failed", err);
+});
+}
+scheduleStatePush(reason || "save");
+} catch (e) {
+console.warn("Save error:", e);
+}
+}
+
+async function loadStateFromServer() {
+let loadedFromServer = false;
+const userId = getPlayerId();
+if (userId) {
+try {
+const resp = await fetch(
+`/api/world?userId=${encodeURIComponent(userId)}`,
+{ credentials: "same-origin" }
+);
+if (resp.ok) {
+const payload = await resp.json();
+if (payload?.state) {
+Object.assign(worldState, payload.state);
+updatePlayerRanking(payload.ranking);
+loadedFromServer = true;
+}
+}
+} catch (err) {
+console.warn("Server load failed", err);
+}
+}
+
+if (!loadedFromServer) {
+try {
+let raw = null;
+if (hasCloudStorage) {
+raw = await cloudGetItem(STORAGE_KEY);
+if (raw) {
+console.log("Loaded from Telegram CloudStorage");
+}
+}
+if (!raw) {
+raw = loadFromLocalStorage();
+if (raw) {
+console.log("Loaded from localStorage");
+}
+}
+if (raw) {
+const data = JSON.parse(raw);
+Object.assign(worldState, data);
+loadedFromServer = true;
+}
+} catch (err) {
+console.warn("Load error:", err);
+}
+}
+
+if (loadedFromServer) {
+updateInspectorCurrentState();
+}
+return loadedFromServer;
+}
 
 
   // ========= РЕНДЕР МИРА =========
@@ -203,9 +946,24 @@ window.addEventListener("load", () => {
       return;
     }
 
+    updateHeroProfileLine();
+
     byId("heroName").textContent = worldState.name;
     byId("heroLevel").textContent = worldState.level;
-    byId("heroTop").textContent = worldState.rankTop.toLocaleString("ru-RU");
+const heroTopEl = byId("heroTop");
+const heroRatingEl = document.getElementById("heroRating");
+const currentTop =
+playerRanking.position || worldState.rankTop || 0;
+if (heroTopEl) {
+heroTopEl.textContent = currentTop
+? Number(currentTop).toLocaleString("ru-RU")
+: "—";
+}
+if (heroRatingEl) {
+heroRatingEl.textContent = (playerRanking.rating || 1200).toLocaleString(
+"ru-RU"
+);
+}
 
     byId("xpNow").textContent = worldState.xp;
     byId("xpNext").textContent = worldState.nextLevelXp;
@@ -236,10 +994,19 @@ window.addEventListener("load", () => {
     const percent = (worldState.energyNow / worldState.energyMax) * 100;
     energyBar.style.width = Math.max(5, Math.min(100, percent)) + "%";
 
-    const rankTopSmall = document.getElementById("rankTopSmall");
-    if (rankTopSmall) {
-      rankTopSmall.textContent = worldState.rankTop.toLocaleString("ru-RU");
-    }
+const rankTopSmall = document.getElementById("rankTopSmall");
+if (rankTopSmall) {
+rankTopSmall.textContent = heroTopEl?.textContent || "—";
+}
+const rankRatingSmall = document.getElementById("rankRatingSmall");
+if (rankRatingSmall) {
+rankRatingSmall.textContent = (playerRanking.rating || 1200).toLocaleString(
+"ru-RU"
+);
+}
+
+    renderBattlePanel();
+    updateInspectorCurrentState();
   }
 
     // ========= СОЗДАНИЕ МИРА =========
@@ -281,7 +1048,7 @@ window.addEventListener("load", () => {
       renderBoosts();
 
       syncWithBot("world_created", { archetype: selectedArch, name });
-      saveStateToServer("world_created");
+      saveWorldState("world_created");
 
       tg?.HapticFeedback?.impactOccurred?.("medium");
       showScreen("home");
@@ -391,17 +1158,18 @@ window.addEventListener("load", () => {
     gainXp(mission.rewardXp);
     mission.done = true;
 
-    worldState.dailyQuestsDone = worldState.missions.filter(
-      (m) => m.done
-    ).length;
+worldState.dailyQuestsDone = worldState.missions.filter(
+(m) => m.done
+).length;
+worldState.travelWorlds = (worldState.travelWorlds || 0) + 1;
 
-    worldState.chaos = Math.max(0, worldState.chaos - 2);
-    worldState.order = 100 - worldState.chaos;
+worldState.chaos = Math.max(0, worldState.chaos - 2);
+worldState.order = 100 - worldState.chaos;
 
     renderWorld();
     renderMissions();
     syncWithBot("mission_completed", { missionId: mission.id });
-    saveStateToServer("mission_completed");
+    saveWorldState("mission_completed");
     tg?.HapticFeedback?.impactOccurred?.("medium");
   }
 
@@ -471,7 +1239,7 @@ window.addEventListener("load", () => {
     renderWorld();
     renderBoosts();
     syncWithBot("boost_used", { boostId: boost.id });
-    saveStateToServer("boost_used");
+    saveWorldState("boost_used");
     tg?.HapticFeedback?.impactOccurred?.("medium");
   }
 
@@ -484,11 +1252,207 @@ window.addEventListener("load", () => {
   const countdownEl = document.getElementById("countdown");
   const resultTextEl = document.getElementById("battleResultText");
   const btnStartBattle = document.getElementById("btnStartBattle");
+  const btnFindOpponent = document.getElementById("btnFindOpponent");
+  const matchStatusEl = document.getElementById("matchStatus");
+  const matchMetaEl = document.getElementById("matchMeta");
+  const rightNameEl = document.getElementById("rightName");
+  const leftNameEl = document.getElementById("leftName");
+  const leftNickEl = document.getElementById("leftNick");
+  const rightNickEl = document.getElementById("rightNick");
+  const leftTagEl = document.getElementById("leftTag");
+  const rightTagEl = document.getElementById("rightTag");
+  const leftAvatarEl = document.getElementById("leftAvatar");
+  const rightAvatarEl = document.getElementById("rightAvatar");
+  const leftEnergyStatEl = document.getElementById("leftEnergyStat");
+  const rightEnergyStatEl = document.getElementById("rightEnergyStat");
+  const leftRegenEl = document.getElementById("leftRegen");
+  const rightRegenEl = document.getElementById("rightRegen");
+  const leftPowerEl = document.getElementById("leftPower");
+  const rightPowerEl = document.getElementById("rightPower");
+
+  function getOpponent() {
+    return activeOpponent || defaultOpponent;
+  }
+
+  function formatArchetype(code) {
+    if (code === "tech") return "Кибер-орден";
+    if (code === "chaos") return "Хаос-рейдер";
+    if (code === "harmony") return "Страж гармонии";
+    return "Пилот MetaWorlds";
+  }
+
+  function setMatchStatus(text, state = "idle") {
+    if (!matchStatusEl) return;
+    matchStatusEl.textContent = text;
+    matchStatusEl.dataset.state = state;
+  }
+
+  function describeOpponent(opponent) {
+    if (!opponent) {
+      return "Рейтинг появится после успешного поиска.";
+    }
+    const record = [
+      `${opponent.worldName} • рейтинг ${opponent.rating}`,
+      `${opponent.wins} побед • ${opponent.losses} поражений`,
+    ];
+    return record.join("\n");
+  }
+
+  function updateMatchMeta(opponent) {
+    if (!matchMetaEl) return;
+    matchMetaEl.textContent = describeOpponent(opponent);
+  }
+
+  function updateMatchButtons() {
+    if (btnFindOpponent) {
+      btnFindOpponent.disabled = matchmakingState.searching;
+      if (matchmakingState.searching) {
+        btnFindOpponent.textContent = "Поиск...";
+      } else if (activeOpponent) {
+        btnFindOpponent.textContent = "🔄 Переподбор";
+      } else {
+        btnFindOpponent.textContent = "🔍 Искать соперника";
+      }
+    }
+    if (btnStartBattle) {
+      btnStartBattle.disabled = !activeOpponent || matchmakingState.searching;
+    }
+  }
+
+  function renderBattlePanel() {
+    if (!leftNameEl || !rightNameEl) return;
+    leftNameEl.textContent = worldState.name || "Твой мир";
+    const heroDisplayName =
+      (worldState.profile?.displayName || worldState.name || "Пилот").toUpperCase();
+    leftNickEl.textContent = heroDisplayName;
+    leftTagEl.textContent = formatArchetype(worldState.archetype);
+    leftAvatarEl.textContent = worldState.profile?.avatarEmoji || "🌌";
+    leftEnergyStatEl.textContent = worldState.energyMax || 1000;
+    leftRegenEl.textContent = Math.max(8, Math.round((worldState.energyMax || 800) / 90));
+    leftPowerEl.textContent = Math.max(20, worldState.level * 4 + 12);
+
+    const opponent = getOpponent();
+    rightNameEl.textContent = opponent.worldName;
+    rightNickEl.textContent = opponent.codename;
+    rightTagEl.textContent = formatArchetype(opponent.archetype);
+    rightAvatarEl.textContent = opponent.avatar || "🛰️";
+    rightEnergyStatEl.textContent = opponent.energy;
+    rightRegenEl.textContent = opponent.regen;
+    rightPowerEl.textContent = opponent.power;
+    if (!matchmakingState.searching) {
+      updateMatchMeta(activeOpponent);
+    }
+    updateMatchButtons();
+    if (!activeOpponent && !matchmakingState.searching) {
+      setMatchStatus(
+        "Нажми «Искать соперника», чтобы дождаться реального пилота.",
+        "idle"
+      );
+    }
+  }
+
+  function clearMatchmakingTimers() {
+    if (matchmakingState.timer) {
+      clearTimeout(matchmakingState.timer);
+      matchmakingState.timer = null;
+    }
+    if (matchmakingState.etaTimer) {
+      clearInterval(matchmakingState.etaTimer);
+      matchmakingState.etaTimer = null;
+    }
+  }
+
+  async function fetchOpponentFromServer() {
+    const userId = getPlayerId();
+    const endpoint = `/api/matchmaking?userId=${encodeURIComponent(userId)}`;
+    const resp = await fetch(`${API_BASE}${endpoint}`, {
+      credentials: "same-origin",
+    });
+    if (!resp.ok) {
+      throw new Error(`matchmaking_failed_${resp.status}`);
+    }
+    return resp.json();
+  }
+
+  function updateSearchCountdown() {
+    if (matchmakingState.etaLeft <= 0) return;
+    setMatchStatus(
+      `Поиск реального соперника… ${matchmakingState.etaLeft} с`,
+      "search"
+    );
+    if (matchMetaEl) {
+      matchMetaEl.textContent = "Связываемся с пилотами рейтинга...";
+    }
+  }
+
+  async function startMatchSearch() {
+    if (matchmakingState.searching) return;
+    const userId = getPlayerId();
+    if (!userId) {
+      window.alert("WebApp не знает твоего Telegram ID. Перезапусти окно из Telegram.");
+      return;
+    }
+    matchmakingState.searching = true;
+    activeOpponent = null;
+    updateMatchMeta(null);
+    renderBattlePanel();
+    updateMatchButtons();
+    setMatchStatus("Поиск реального соперника...", "search");
+
+    try {
+      const payload = await fetchOpponentFromServer();
+      const eta = Math.max(1, payload.etaSeconds || 3);
+      matchmakingState.etaLeft = eta;
+      updateSearchCountdown();
+      await new Promise((resolve) => {
+        matchmakingState.timer = setTimeout(resolve, eta * 1000);
+        matchmakingState.etaTimer = setInterval(() => {
+          matchmakingState.etaLeft -= 1;
+          if (matchmakingState.etaLeft <= 0) {
+            clearMatchmakingTimers();
+          } else {
+            updateSearchCountdown();
+          }
+        }, 1000);
+      });
+      clearMatchmakingTimers();
+      activeOpponent = payload.opponent || null;
+      if (activeOpponent) {
+        renderBattlePanel();
+        setMatchStatus(
+          `Пилот ${activeOpponent.codename} готов к бою.`,
+          "ready"
+        );
+        syncWithBot("match_found", {
+          opponentId: activeOpponent.userId,
+          rating: activeOpponent.rating,
+          bot: Boolean(activeOpponent.isBot),
+        });
+      } else {
+        setMatchStatus("Сервер не прислал соперника. Попробуй ещё раз.", "error");
+      }
+    } catch (err) {
+      console.warn("matchmaking failed", err);
+      setMatchStatus("Не удалось найти соперника. Попробуй ещё раз.", "error");
+    } finally {
+      clearMatchmakingTimers();
+      matchmakingState.searching = false;
+      updateMatchMeta(activeOpponent);
+      updateMatchButtons();
+    }
+  }
 
   function setHp(numEl, barEl, hp) {
     if (!numEl || !barEl) return;
     numEl.textContent = hp;
     barEl.style.width = Math.max(5, hp) + "%";
+  }
+
+  if (btnFindOpponent) {
+    btnFindOpponent.addEventListener("click", () => {
+      startMatchSearch();
+      tg?.HapticFeedback?.selectionChanged?.();
+    });
   }
 
   if (btnStartBattle) {
@@ -499,12 +1463,21 @@ window.addEventListener("load", () => {
         return;
       }
 
+      if (!activeOpponent) {
+        window.alert("Сначала найди соперника через сеть MetaWorlds.");
+        tg?.HapticFeedback?.notificationOccurred?.("error");
+        return;
+      }
+
       setHp(leftHpEl, leftHpBar, 100);
       setHp(rightHpEl, rightHpBar, 100);
       resultTextEl.textContent = "Бой начинается...";
       let cd = 3;
       countdownEl.textContent = cd;
       btnStartBattle.disabled = true;
+      if (btnFindOpponent) {
+        btnFindOpponent.disabled = true;
+      }
       tg?.HapticFeedback?.impactOccurred?.("light");
 
       const timer = setInterval(() => {
@@ -541,10 +1514,24 @@ window.addEventListener("load", () => {
 
           worldState.order = 100 - worldState.chaos;
           renderWorld();
-          saveStateToServer("battle_finished");
-          syncWithBot("battle_finished", { win, leftHp, rightHp });
+          saveWorldState("battle_finished");
+          syncWithBot("battle_finished", {
+            win,
+            leftHp,
+            rightHp,
+            opponentId: activeOpponent.userId,
+            opponentCodename: activeOpponent.codename,
+          });
+          setMatchStatus(
+            `Результат боя с ${activeOpponent.codename} отправлен в рейтинг.`,
+            "ready"
+          );
 
           btnStartBattle.disabled = false;
+          if (btnFindOpponent) {
+            btnFindOpponent.disabled = false;
+          }
+          countdownEl.textContent = "—";
           tg?.HapticFeedback?.impactOccurred?.("medium");
         }
       }, 600);
@@ -560,24 +1547,39 @@ window.addEventListener("load", () => {
         worldState.energyNow + 5
       );
       renderWorld();
+      saveWorldState("passive_regen");
     }
   }, 15000);
+
+  window.addEventListener("beforeunload", () => {
+    if (!tg || !tg.sendData) return;
+    try {
+      syncWithBot("state_snapshot", { reason: "unload" });
+    } catch (err) {
+      console.warn("sendData before unload failed", err);
+    }
+  });
 
   // ========= СТАРТ =========
 
   (async () => {
     await loadStateFromServer();
+    refreshProfileUI();
+    refreshInspectorStorage();
+    scheduleStatePush("boot");
 
-    if (worldState.isCreated) {
-      generateDailyMissions();
-      renderWorld();
-      renderMissions();
-      renderBoosts();
-      showScreen("home");
-    } else {
-      renderWorld();
-      showScreen("create");
-    }
+if (worldState.isCreated) {
+if (!worldState.missions || worldState.missions.length === 0) {
+generateDailyMissions();
+}
+renderWorld();
+renderMissions();
+renderBoosts();
+showScreen("home");
+} else {
+renderWorld();
+showScreen("create");
+}
   })();
 }); 
 
