@@ -5,7 +5,7 @@
   <title>MetaWorlds</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./dist/styles.min.css" />
 </head>
 <body>
 <div class="app">
@@ -39,7 +39,12 @@
             </div>
           </div>
           <div class="badge-rank">
-            Gold III • TOP <span id="heroTop"></span>
+            <div class="badge-rank-line">
+              🏅 Рейтинг <span id="heroRating">1 200</span>
+            </div>
+            <div class="badge-rank-line">
+              TOP <span id="heroTop">—</span>
+            </div>
           </div>
         </div>
 
@@ -253,8 +258,8 @@
         <div class="mission-card">
           <div class="mission-title">Текущий дивизион</div>
           <div class="mission-meta">
-            <span>Gold III</span>
-            <span>TOP <span id="rankTopSmall">1 284</span></span>
+            <span>Рейтинг <span id="rankRatingSmall">1 200</span></span>
+            <span>TOP <span id="rankTopSmall">—</span></span>
           </div>
           <div class="mission-desc">
             Позже здесь будет полноценный лидерборд по игрокам.
@@ -381,6 +386,6 @@
   </nav>
 </div>
 
-<script src="./main.js"></script>
+<script defer src="./dist/main.min.js"></script>
 </body>
 </html>
