@@ -35,21 +35,54 @@ let playerRanking = {
   wins: 0,
   losses: 0,
 };
-const defaultOpponent = {
-  userId: "bot_placeholder",
-  codename: "HASTER100",
-  avatar: "🐕‍🦺",
-  worldName: "Случайный противник",
-  archetype: "tech",
-  rating: 1240,
-  wins: 6,
-  losses: 3,
-  level: 9,
-  energy: 920,
-  regen: 11,
-  power: 32,
-  isBot: true,
-};
+const trainingBotPool = [
+  {
+    userId: "bot_placeholder",
+    codename: "HASTER100",
+    avatar: "🐕‍🦺",
+    worldName: "Случайный противник",
+    archetype: "tech",
+    rating: 1240,
+    wins: 6,
+    losses: 3,
+    level: 9,
+    energy: 920,
+    regen: 11,
+    power: 32,
+    isBot: true,
+  },
+  {
+    userId: "bot_oracle",
+    codename: "ORACLE-7",
+    avatar: "🔮",
+    worldName: "Сфера Предвидения",
+    archetype: "harmony",
+    rating: 1310,
+    wins: 12,
+    losses: 5,
+    level: 11,
+    energy: 980,
+    regen: 13,
+    power: 36,
+    isBot: true,
+  },
+  {
+    userId: "bot_specter",
+    codename: "SPECTER",
+    avatar: "👻",
+    worldName: "Тень Архива",
+    archetype: "chaos",
+    rating: 1180,
+    wins: 9,
+    losses: 7,
+    level: 8,
+    energy: 870,
+    regen: 10,
+    power: 30,
+    isBot: true,
+  },
+];
+const defaultOpponent = trainingBotPool[0];
 let activeOpponent = null;
 const matchmakingState = {
   searching: false,
@@ -1301,6 +1334,21 @@ worldState.order = 100 - worldState.chaos;
     return activeOpponent || defaultOpponent;
   }
 
+  function pickLocalTrainingBot() {
+    const template = trainingBotPool[Math.floor(Math.random() * trainingBotPool.length)];
+    const fluctuation = Math.floor(Math.random() * 40) - 10;
+    const energyBoost = Math.max(0, fluctuation * 4);
+    return {
+      ...template,
+      userId: `${template.userId}_${Date.now()}`,
+      rating: Math.max(900, template.rating + fluctuation * 5),
+      energy: template.energy + energyBoost,
+      power: template.power + Math.floor(fluctuation / 2),
+      isBot: true,
+      localFallback: true,
+    };
+  }
+
   function formatArchetype(code) {
     if (code === "tech") return "Кибер-орден";
     if (code === "chaos") return "Хаос-рейдер";
@@ -1403,6 +1451,39 @@ worldState.order = 100 - worldState.chaos;
     }
   }
 
+  function activateOpponent(opponent, context = {}) {
+    if (!opponent) {
+      setMatchStatus("Соперник недоступен. Попробуй ещё раз.", "error");
+      return;
+    }
+    const reason = context.reason || (context.matched ? "player" : "server_bot");
+    activeOpponent = opponent;
+    renderBattlePanel();
+    updateMatchMeta(opponent);
+    updateMatchButtons();
+
+    let statusText;
+    if (opponent.isBot) {
+      if (reason === "offline") {
+        statusText = `Связь с сервером нестабильна — тренер ${opponent.codename} уже в строю.`;
+      } else if (reason === "no_players") {
+        statusText = `Пока нет живых пилотов — тренер ${opponent.codename} готов к бою.`;
+      } else {
+        statusText = `Сервер подключил тренера ${opponent.codename}.`;
+      }
+    } else {
+      statusText = `Пилот ${opponent.codename} готов к бою.`;
+    }
+    setMatchStatus(statusText, "ready");
+    syncWithBot("match_found", {
+      opponentId: opponent.userId,
+      rating: opponent.rating,
+      bot: Boolean(opponent.isBot),
+      matched: Boolean(context.matched),
+      reason,
+    });
+  }
+
   async function fetchOpponentFromServer() {
     const userId = getPlayerId();
     const endpoint = `/api/matchmaking?userId=${encodeURIComponent(userId)}`;
@@ -1431,26 +1512,19 @@ worldState.order = 100 - worldState.chaos;
 
     try {
       const payload = await fetchOpponentFromServer();
-      stopSearchTicker();
-      activeOpponent = payload.opponent || null;
-      if (activeOpponent) {
-        renderBattlePanel();
-        const statusText = activeOpponent.isBot
-          ? `Сервер подобрал тренера ${activeOpponent.codename}.`
-          : `Пилот ${activeOpponent.codename} готов к бою.`;
-        setMatchStatus(statusText, "ready");
-        syncWithBot("match_found", {
-          opponentId: activeOpponent.userId,
-          rating: activeOpponent.rating,
-          bot: Boolean(activeOpponent.isBot),
-        });
-      } else {
-        setMatchStatus("Сервер не прислал соперника. Попробуй ещё раз.", "error");
+      let opponent = payload.opponent || null;
+      if (!opponent) {
+        console.warn("matchmaking returned no opponent, falling back to local bot");
+        opponent = pickLocalTrainingBot();
       }
+      activateOpponent(opponent, {
+        matched: Boolean(payload?.matched),
+        reason: opponent.localFallback ? "no_players" : payload?.matched ? "player" : "server_bot",
+      });
     } catch (err) {
-      stopSearchTicker();
       console.warn("matchmaking failed", err);
-      setMatchStatus("Не удалось найти соперника. Попробуй ещё раз.", "error");
+      const botOpponent = pickLocalTrainingBot();
+      activateOpponent(botOpponent, { reason: "offline" });
     } finally {
       stopSearchTicker();
       matchmakingState.searching = false;
