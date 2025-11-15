@@ -1,0 +1,21 @@
+{
+  "name": "metaworlds-webapp",
+  "version": "1.0.0",
+  "description": "MetaWorlds Telegram WebApp + lightweight backend",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js",
+    "build": "node scripts/build-assets.js",
+    "dev": "NODE_ENV=development node index.js"
+  },
+  "keywords": [
+    "telegram",
+    "webapp",
+    "game"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {}
+}

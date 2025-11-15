@@ -1,10 +1,20 @@
 window.addEventListener("load", () => {
-	const STORAGE_KEY = "metaworlds_state_v1";
-	const tg = window.Telegram?.WebApp;
-  if (tg) {
-    tg.expand();
-    tg.ready();
-  }
+const STORAGE_KEY = "metaworlds_state_v1";
+const tg = window.Telegram?.WebApp;
+const API_BASE = "";
+const playerId = tg?.initDataUnsafe?.user?.id
+  ? `tg_${tg.initDataUnsafe.user.id}`
+  : "local-debug";
+let playerRanking = {
+  rating: 1200,
+  position: 0,
+  wins: 0,
+  losses: 0,
+};
+if (tg) {
+tg.expand();
+tg.ready();
+}
 
   // ========= СОСТОЯНИЕ МИРА =========
   const worldState = {
@@ -123,49 +133,349 @@ window.addEventListener("load", () => {
     worldState.dailyQuestsTotal = worldState.missions.length;
   }
 
-  function syncWithBot(eventType, extra) {
+const hasCloudStorage = Boolean(tg?.CloudStorage);
+
+function getPlayerId() {
+return playerId;
+}
+
+async function postJson(url, body) {
+const endpoint = url.startsWith("http") ? url : `${API_BASE}${url}`;
+const resp = await fetch(endpoint, {
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+},
+body: JSON.stringify(body),
+credentials: "same-origin",
+});
+if (!resp.ok) {
+throw new Error(`Request failed with ${resp.status}`);
+}
+return resp.json();
+}
+
+let lastSyncedPayload = null;
+
+function updatePlayerRanking(ranking) {
+if (!ranking) return;
+playerRanking = {
+rating: ranking.rating ?? playerRanking.rating,
+position: ranking.position ?? playerRanking.position,
+wins: ranking.wins ?? playerRanking.wins,
+losses: ranking.losses ?? playerRanking.losses,
+};
+if (playerRanking.position) {
+worldState.rankTop = playerRanking.position;
+}
+}
+
+  const inspectorEls = {
+    card: document.getElementById("dataInspectorCard"),
+    toggle: document.getElementById("btnToggleInspector"),
+    refresh: document.getElementById("btnRefreshInspector"),
+    status: document.getElementById("inspectorStatus"),
+    current: document.getElementById("inspectorCurrentState"),
+    last: document.getElementById("inspectorLastSnapshot"),
+    stored: document.getElementById("inspectorStoredState"),
+    source: document.getElementById("inspectorStorageSource"),
+  };
+
+  function formatJson(value) {
+    try {
+      if (typeof value === "string") {
+        return JSON.stringify(JSON.parse(value), null, 2);
+      }
+      return JSON.stringify(value, null, 2);
+    } catch (err) {
+      return typeof value === "string" ? value : String(value);
+    }
+  }
+
+  function setInspectorStatus(text) {
+    if (inspectorEls.status) {
+      inspectorEls.status.textContent = text || "";
+    }
+  }
+
+  function updateInspectorCurrentState() {
+    if (!inspectorEls.current) return;
+    inspectorEls.current.textContent = formatJson(worldState);
+  }
+
+  function updateInspectorLastSnapshot() {
+    if (!inspectorEls.last) return;
+    if (!lastSyncedPayload) {
+      inspectorEls.last.textContent = "Снапшоты ещё не отправлялись";
+      return;
+    }
+    inspectorEls.last.textContent = formatJson(lastSyncedPayload);
+  }
+
+  function updateInspectorStoredState(raw, sourceLabel = "—") {
+    if (!inspectorEls.stored) return;
+    if (!raw) {
+      inspectorEls.stored.textContent = "Сохранённых данных пока нет";
+      if (inspectorEls.source) inspectorEls.source.textContent = "—";
+      return;
+    }
+    inspectorEls.stored.textContent = formatJson(raw);
+    if (inspectorEls.source) inspectorEls.source.textContent = sourceLabel;
+  }
+
+  async function readStoredStateSnapshot() {
+    let raw = null;
+    let source = null;
+    if (hasCloudStorage) {
+      try {
+        raw = await cloudGetItem(STORAGE_KEY);
+        if (raw) {
+          source = "Telegram CloudStorage";
+        }
+      } catch (err) {
+        console.warn("CloudStorage read failed", err);
+      }
+    }
+
+    if (!raw) {
+      try {
+        raw = loadFromLocalStorage();
+        if (raw) {
+          source = "localStorage";
+        }
+      } catch (err) {
+        console.warn("localStorage read failed", err);
+      }
+    }
+
+    return { raw, source };
+  }
+
+  async function refreshInspectorStorage() {
+    if (!inspectorEls.stored) return;
+    try {
+      setInspectorStatus("Обновляю…");
+      inspectorEls.refresh?.setAttribute("disabled", "disabled");
+      const { raw, source } = await readStoredStateSnapshot();
+      if (raw) {
+        updateInspectorStoredState(raw, source || "localStorage");
+      } else {
+        inspectorEls.stored.textContent = "В хранилище данных нет";
+        if (inspectorEls.source) inspectorEls.source.textContent = "—";
+      }
+    } catch (err) {
+      inspectorEls.stored.textContent = `Ошибка чтения: ${err.message || err}`;
+      if (inspectorEls.source) inspectorEls.source.textContent = "—";
+    } finally {
+      inspectorEls.refresh?.removeAttribute("disabled");
+      setInspectorStatus("");
+    }
+  }
+
+  function initInspectorControls() {
+    if (inspectorEls.toggle && inspectorEls.card) {
+      inspectorEls.toggle.addEventListener("click", () => {
+        const open = inspectorEls.card.classList.toggle("inspector-open");
+        inspectorEls.toggle.textContent = open ? "Свернуть" : "Показать";
+        if (open) {
+          updateInspectorCurrentState();
+          updateInspectorLastSnapshot();
+        }
+      });
+    }
+
+    if (inspectorEls.refresh) {
+      inspectorEls.refresh.addEventListener("click", () => {
+        refreshInspectorStorage();
+      });
+    }
+  }
+
+  initInspectorControls();
+  updateInspectorCurrentState();
+  updateInspectorLastSnapshot();
+  updateInspectorStoredState(null);
+
+  function serializeState() {
+    return JSON.parse(JSON.stringify(worldState));
+  }
+
+function syncWithBot(eventType, extra) {
+const payload = {
+type: eventType,
+world: {
+name: worldState.name,
+level: worldState.level,
+xp: worldState.xp,
+nextLevelXp: worldState.nextLevelXp,
+rankTop: worldState.rankTop,
+energyNow: worldState.energyNow,
+energyMax: worldState.energyMax,
+coins: worldState.coins,
+chaos: worldState.chaos,
+order: worldState.order,
+},
+state: serializeState(),
+extra: extra || null,
+timestamp: new Date().toISOString(),
+};
+lastSyncedPayload = payload;
+updateInspectorLastSnapshot();
+if (tg?.sendData) {
+try {
+tg.sendData(JSON.stringify(payload));
+} catch (err) {
+console.warn("sendData failed", err);
+}
+}
+sendEventToServer(eventType, extra);
+}
+
+function sendEventToServer(eventType, extra) {
+const userId = getPlayerId();
+if (!userId) return;
+postJson("/api/events", {
+userId,
+type: eventType,
+state: serializeState(),
+extra: extra || null,
+timestamp: new Date().toISOString(),
+}).catch((err) => {
+console.warn("Server event sync failed", err);
+});
+}
+
+  let botSyncTimer = null;
+  let pendingReason = null;
+  function scheduleStatePush(reason = "auto") {
     if (!tg || !tg.sendData) return;
-    const payload = {
-      type: eventType,
-      world: {
-        name: worldState.name,
-        level: worldState.level,
-        xp: worldState.xp,
-        nextLevelXp: worldState.nextLevelXp,
-        rankTop: worldState.rankTop,
-        energyNow: worldState.energyNow,
-        energyMax: worldState.energyMax,
-        coins: worldState.coins,
-        chaos: worldState.chaos,
-        order: worldState.order,
-      },
-      extra: extra || null,
-    };
-    tg.sendData(JSON.stringify(payload));
+    pendingReason = reason;
+    if (botSyncTimer) return;
+    botSyncTimer = setTimeout(() => {
+      botSyncTimer = null;
+      const extra = { reason: pendingReason };
+      pendingReason = null;
+      syncWithBot("state_snapshot", extra);
+    }, 350);
   }
 
-  async function saveStateToServer(reason = "") {
-    try {
-      const data = JSON.stringify(worldState);
-      localStorage.setItem(STORAGE_KEY, data);
-      console.log("Saved to localStorage:", reason);
-    } catch (e) {
-      console.warn("Save error:", e);
-    }
+  function saveToLocalStorage(data, reason) {
+    localStorage.setItem(STORAGE_KEY, data);
+    console.log("Saved to localStorage:", reason);
   }
 
-  async function loadStateFromServer() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const data = JSON.parse(raw);
-      // Аккуратно переносим поля в текущий worldState
-      Object.assign(worldState, data);
-      console.log("Loaded from localStorage");
-    } catch (e) {
-      console.warn("Load error:", e);
-    }
+  function loadFromLocalStorage() {
+    return localStorage.getItem(STORAGE_KEY);
   }
+
+  function cloudSetItem(key, value) {
+    return new Promise((resolve, reject) => {
+      tg.CloudStorage.setItem(key, value, (err, success) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(success);
+        }
+      });
+    });
+  }
+
+  function cloudGetItem(key) {
+    return new Promise((resolve, reject) => {
+      tg.CloudStorage.getItem(key, (err, value) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(value);
+        }
+      });
+    });
+  }
+
+async function saveWorldState(reason = "") {
+try {
+const data = JSON.stringify(worldState);
+saveToLocalStorage(data, reason);
+let storageLabel = "localStorage";
+if (hasCloudStorage) {
+try {
+await cloudSetItem(STORAGE_KEY, data);
+storageLabel = "Telegram CloudStorage + localStorage";
+console.log("Saved to Telegram CloudStorage:", reason);
+} catch (err) {
+console.warn("CloudStorage save failed", err);
+}
+}
+updateInspectorStoredState(data, storageLabel);
+const userId = getPlayerId();
+if (userId) {
+postJson("/api/world", {
+userId,
+state: serializeState(),
+reason: reason || null,
+timestamp: Date.now(),
+}).catch((err) => {
+console.warn("Server save failed", err);
+});
+}
+scheduleStatePush(reason || "save");
+} catch (e) {
+console.warn("Save error:", e);
+}
+}
+
+async function loadStateFromServer() {
+let loadedFromServer = false;
+const userId = getPlayerId();
+if (userId) {
+try {
+const resp = await fetch(
+`/api/world?userId=${encodeURIComponent(userId)}`,
+{ credentials: "same-origin" }
+);
+if (resp.ok) {
+const payload = await resp.json();
+if (payload?.state) {
+Object.assign(worldState, payload.state);
+updatePlayerRanking(payload.ranking);
+loadedFromServer = true;
+}
+}
+} catch (err) {
+console.warn("Server load failed", err);
+}
+}
+
+if (!loadedFromServer) {
+try {
+let raw = null;
+if (hasCloudStorage) {
+raw = await cloudGetItem(STORAGE_KEY);
+if (raw) {
+console.log("Loaded from Telegram CloudStorage");
+}
+}
+if (!raw) {
+raw = loadFromLocalStorage();
+if (raw) {
+console.log("Loaded from localStorage");
+}
+}
+if (raw) {
+const data = JSON.parse(raw);
+Object.assign(worldState, data);
+loadedFromServer = true;
+}
+} catch (err) {
+console.warn("Load error:", err);
+}
+}
+
+if (loadedFromServer) {
+updateInspectorCurrentState();
+}
+return loadedFromServer;
+}
 
 
   // ========= РЕНДЕР МИРА =========
@@ -205,7 +515,20 @@ window.addEventListener("load", () => {
 
     byId("heroName").textContent = worldState.name;
     byId("heroLevel").textContent = worldState.level;
-    byId("heroTop").textContent = worldState.rankTop.toLocaleString("ru-RU");
+const heroTopEl = byId("heroTop");
+const heroRatingEl = document.getElementById("heroRating");
+const currentTop =
+playerRanking.position || worldState.rankTop || 0;
+if (heroTopEl) {
+heroTopEl.textContent = currentTop
+? Number(currentTop).toLocaleString("ru-RU")
+: "—";
+}
+if (heroRatingEl) {
+heroRatingEl.textContent = (playerRanking.rating || 1200).toLocaleString(
+"ru-RU"
+);
+}
 
     byId("xpNow").textContent = worldState.xp;
     byId("xpNext").textContent = worldState.nextLevelXp;
@@ -236,10 +559,18 @@ window.addEventListener("load", () => {
     const percent = (worldState.energyNow / worldState.energyMax) * 100;
     energyBar.style.width = Math.max(5, Math.min(100, percent)) + "%";
 
-    const rankTopSmall = document.getElementById("rankTopSmall");
-    if (rankTopSmall) {
-      rankTopSmall.textContent = worldState.rankTop.toLocaleString("ru-RU");
-    }
+const rankTopSmall = document.getElementById("rankTopSmall");
+if (rankTopSmall) {
+rankTopSmall.textContent = heroTopEl?.textContent || "—";
+}
+const rankRatingSmall = document.getElementById("rankRatingSmall");
+if (rankRatingSmall) {
+rankRatingSmall.textContent = (playerRanking.rating || 1200).toLocaleString(
+"ru-RU"
+);
+}
+
+    updateInspectorCurrentState();
   }
 
     // ========= СОЗДАНИЕ МИРА =========
@@ -281,7 +612,7 @@ window.addEventListener("load", () => {
       renderBoosts();
 
       syncWithBot("world_created", { archetype: selectedArch, name });
-      saveStateToServer("world_created");
+      saveWorldState("world_created");
 
       tg?.HapticFeedback?.impactOccurred?.("medium");
       showScreen("home");
@@ -391,17 +722,18 @@ window.addEventListener("load", () => {
     gainXp(mission.rewardXp);
     mission.done = true;
 
-    worldState.dailyQuestsDone = worldState.missions.filter(
-      (m) => m.done
-    ).length;
+worldState.dailyQuestsDone = worldState.missions.filter(
+(m) => m.done
+).length;
+worldState.travelWorlds = (worldState.travelWorlds || 0) + 1;
 
-    worldState.chaos = Math.max(0, worldState.chaos - 2);
-    worldState.order = 100 - worldState.chaos;
+worldState.chaos = Math.max(0, worldState.chaos - 2);
+worldState.order = 100 - worldState.chaos;
 
     renderWorld();
     renderMissions();
     syncWithBot("mission_completed", { missionId: mission.id });
-    saveStateToServer("mission_completed");
+    saveWorldState("mission_completed");
     tg?.HapticFeedback?.impactOccurred?.("medium");
   }
 
@@ -471,7 +803,7 @@ window.addEventListener("load", () => {
     renderWorld();
     renderBoosts();
     syncWithBot("boost_used", { boostId: boost.id });
-    saveStateToServer("boost_used");
+    saveWorldState("boost_used");
     tg?.HapticFeedback?.impactOccurred?.("medium");
   }
 
@@ -541,7 +873,7 @@ window.addEventListener("load", () => {
 
           worldState.order = 100 - worldState.chaos;
           renderWorld();
-          saveStateToServer("battle_finished");
+          saveWorldState("battle_finished");
           syncWithBot("battle_finished", { win, leftHp, rightHp });
 
           btnStartBattle.disabled = false;
@@ -560,24 +892,38 @@ window.addEventListener("load", () => {
         worldState.energyNow + 5
       );
       renderWorld();
+      saveWorldState("passive_regen");
     }
   }, 15000);
+
+  window.addEventListener("beforeunload", () => {
+    if (!tg || !tg.sendData) return;
+    try {
+      syncWithBot("state_snapshot", { reason: "unload" });
+    } catch (err) {
+      console.warn("sendData before unload failed", err);
+    }
+  });
 
   // ========= СТАРТ =========
 
   (async () => {
     await loadStateFromServer();
+    refreshInspectorStorage();
+    scheduleStatePush("boot");
 
-    if (worldState.isCreated) {
-      generateDailyMissions();
-      renderWorld();
-      renderMissions();
-      renderBoosts();
-      showScreen("home");
-    } else {
-      renderWorld();
-      showScreen("create");
-    }
+if (worldState.isCreated) {
+if (!worldState.missions || worldState.missions.length === 0) {
+generateDailyMissions();
+}
+renderWorld();
+renderMissions();
+renderBoosts();
+showScreen("home");
+} else {
+renderWorld();
+showScreen("create");
+}
   })();
 }); 
 
