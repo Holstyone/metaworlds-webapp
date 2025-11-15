@@ -149,7 +149,58 @@ window.addEventListener("load", () => {
       extra: extra || null,
       timestamp: new Date().toISOString(),
     };
-    tg.sendData(JSON.stringify(payload));
+    try {
+      tg.sendData(JSON.stringify(payload));
+    } catch (err) {
+      console.warn("sendData failed", err);
+    }
+  }
+
+  let botSyncTimer = null;
+  let pendingReason = null;
+  function scheduleStatePush(reason = "auto") {
+    if (!tg || !tg.sendData) return;
+    pendingReason = reason;
+    if (botSyncTimer) return;
+    botSyncTimer = setTimeout(() => {
+      botSyncTimer = null;
+      const extra = { reason: pendingReason };
+      pendingReason = null;
+      syncWithBot("state_snapshot", extra);
+    }, 350);
+  }
+
+  function saveToLocalStorage(data, reason) {
+    localStorage.setItem(STORAGE_KEY, data);
+    console.log("Saved to localStorage:", reason);
+  }
+
+  function loadFromLocalStorage() {
+    return localStorage.getItem(STORAGE_KEY);
+  }
+
+  function cloudSetItem(key, value) {
+    return new Promise((resolve, reject) => {
+      tg.CloudStorage.setItem(key, value, (err, success) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(success);
+        }
+      });
+    });
+  }
+
+  function cloudGetItem(key) {
+    return new Promise((resolve, reject) => {
+      tg.CloudStorage.getItem(key, (err, value) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(value);
+        }
+      });
+    });
   }
 
   function saveToLocalStorage(data, reason) {
@@ -194,6 +245,7 @@ window.addEventListener("load", () => {
         await cloudSetItem(STORAGE_KEY, data);
         console.log("Saved to Telegram CloudStorage:", reason);
       }
+      scheduleStatePush(reason || "save");
     } catch (e) {
       console.warn("Save error:", e);
     }
@@ -616,13 +668,24 @@ window.addEventListener("load", () => {
         worldState.energyNow + 5
       );
       renderWorld();
+      saveStateToServer("passive_regen");
     }
   }, 15000);
+
+  window.addEventListener("beforeunload", () => {
+    if (!tg || !tg.sendData) return;
+    try {
+      syncWithBot("state_snapshot", { reason: "unload" });
+    } catch (err) {
+      console.warn("sendData before unload failed", err);
+    }
+  });
 
   // ========= СТАРТ =========
 
   (async () => {
     await loadStateFromServer();
+    scheduleStatePush("boot");
 
     if (worldState.isCreated) {
       generateDailyMissions();
