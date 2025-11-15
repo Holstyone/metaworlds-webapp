@@ -1,7 +1,7 @@
 window.addEventListener("load", () => {
   const STORAGE_KEY = "metaworlds_state_v1";
   const tg = window.Telegram?.WebApp;
-  const API_BASE = "";
+  const API_BASE = "http://localhost:3001";
   const playerId = tg?.initDataUnsafe?.user?.id
     ? `tg_${tg.initDataUnsafe.user.id}`
     : "local-debug";
@@ -908,6 +908,17 @@ window.addEventListener("load", () => {
   });
 
   // ========= СТАРТ =========
+
+  async function postJson(url, body) {
+  const endpoint = url.startsWith("http") ? url : `${API_BASE}${url}`;
+  const resp = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) throw new Error(`Request failed with ${resp.status}`);
+  return resp.json();
+}
 
   (async () => {
     await loadStateFromServer();
