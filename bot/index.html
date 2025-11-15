@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>MetaWorlds</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+<div class="app">
+  <!-- Шапка общая -->
+  <header class="top">
+    <div class="top-title">
+      <span>🪐</span> MetaWorlds Core
+    </div>
+    <div class="top-pill">Season 1 • Beta</div>
+  </header>
+
+  <!-- Контент (экраны) -->
+  <main class="content">
+    <!-- ЭКРАН: МИР -->
+    <section class="screen" id="screen-home" data-screen="home">
+      <div class="hero-card">
+        <div class="hero-header">
+          <div>
+            <div class="hero-name" id="heroName"></div>
+            <div class="hero-sub">
+              Твой мир • Уровень <span id="heroLevel"></span>
+            </div>
+
+            <!-- прогресс уровня -->
+            <div class="level-row">
+              <span>⭐ Прогресс уровня</span>
+              <span><span id="xpNow"></span>/<span id="xpNext"></span></span>
+            </div>
+            <div class="bar level-bar">
+              <div class="bar-fill bar-xp" id="xpBar"></div>
+            </div>
+          </div>
+          <div class="badge-rank">
+            Gold III • TOP <span id="heroTop"></span>
+          </div>
+        </div>
+
+        <div class="hero-main">
+          <div class="hero-avatar-wrap">
+            <div class="hero-avatar">🧙‍♂️</div>
+          </div>
+
+          <div class="hero-stats">
+            <div>
+              <div class="stat-line">
+                <span>⚡ Энергия</span>
+                <strong><span id="energyNow"></span>/<span id="energyMax"></span></strong>
+              </div>
+              <div class="bar">
+                <div class="bar-fill" id="energyBar"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="stat-line">
+                <span>💰 Прибыль в час</span>
+                <strong>+<span id="profitHour"></span></strong>
+              </div>
+              <div class="bar">
+                <div class="bar-fill bar-profit"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="stat-line">
+                <span>🌀 Хаос / Порядок</span>
+                <strong id="chaosOrder"></strong>
+              </div>
+              <div class="bar">
+                <div class="bar-fill bar-chaos"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-footer">
+          <div>
+            Баланс монет<br />
+            <span class="big-balance" id="coins"></span>
+          </div>
+          <div>
+            Сердце мира: <b id="coreName">Кристальный кодекс</b><br />
+            Эпоха: <b id="epoch"></b>
+          </div>
+        </div>
+
+        <!-- Переход к бою -->
+        <button class="btn-main" data-screen-target="battle">
+          ⚔️ Запустить бой за мир
+        </button>
+      </div>
+
+      <div class="grid">
+        <div class="small-card">
+          <div class="small-label">Дневной прогресс</div>
+          <div class="small-value" id="dailyQuestsText"></div>
+          <div class="chip" id="dailyBonusText"></div>
+        </div>
+        <div class="small-card">
+          <div class="small-label">Путешествия</div>
+          <div class="small-value" id="travelWorldsText"></div>
+          <div class="chip">🧭 Новая экспедиция доступна</div>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+      <div class="bottom-caption">
+        MetaWorlds • управляй своим миром и готовься к битве.
+      </div>
+    </section>
+
+    <!-- ЭКРАН: БОЙ -->
+    <section class="screen" id="screen-battle" data-screen="battle">
+      <div class="battle-header-row">
+        <button class="btn-ghost" data-screen-target="home">← К миру</button>
+        <div class="battle-title">Бой за мир</div>
+        <div class="battle-header-spacer"></div>
+      </div>
+
+      <div class="battle-card">
+        <div class="battle-bar-row">
+          <div class="hp-wrap">
+            <div class="hp-name">
+              <span id="leftName">Твой мир</span>
+              <span><span id="leftHp">100</span> / 100</span>
+            </div>
+            <div class="hp-bar">
+              <div class="hp-fill-left" id="leftHpBar"></div>
+            </div>
+          </div>
+          <div class="hp-wrap">
+            <div class="hp-name hp-name-right">
+              <span><span id="rightHp">100</span> / 100</span>
+              <span id="rightName">Случайный противник</span>
+            </div>
+            <div class="hp-bar">
+              <div class="hp-fill-right" id="rightHpBar"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="battle-vs-area">
+          <div class="fighters-row">
+            <div class="fighter">
+              <div class="fighter-avatar">🌵</div>
+              <div class="fighter-name" id="leftNick">ALOHA</div>
+              <div class="fighter-tag">Маготех-танк</div>
+            </div>
+
+            <div class="vs-label">VS</div>
+
+            <div class="fighter">
+              <div class="fighter-avatar">🐕‍🦺</div>
+              <div class="fighter-name" id="rightNick">HASTER100</div>
+              <div class="fighter-tag">Кибер-ронін</div>
+            </div>
+          </div>
+
+          <div class="battle-stats-row">
+            <div class="stat-col">
+              <div class="stat-item"><span>Макс. энергия</span><span id="leftEnergyStat">15</span></div>
+              <div class="stat-item"><span>Восстановление</span><span id="leftRegen">12</span></div>
+              <div class="stat-item"><span>Сила</span><span id="leftPower">26</span></div>
+            </div>
+            <div class="stat-col stat-col-right">
+              <div class="stat-item"><span id="rightEnergyStat">27</span><span>Макс. энергия</span></div>
+              <div class="stat-item"><span id="rightRegen">11</span><span>Восстановление</span></div>
+              <div class="stat-item"><span id="rightPower">25</span><span>Сила</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="battle-footer">
+          <div class="battle-countdown" id="countdown">GO</div>
+          <div id="battleResultText">
+            Нажми «Начать бой», чтобы симулировать исход.
+          </div>
+          <button class="btn-battle" id="btnStartBattle">🔥 Начать бой</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ЭКРАН: МИССИИ -->
+    <section class="screen" id="screen-missions" data-screen="missions">
+      <h2 class="screen-title">Миссии</h2>
+      <p class="muted">
+        Выполняй задания, чтобы получать монеты и опыт мира.
+      </p>
+      <div id="missionsList" class="mission-list"></div>
+    </section>
+
+    <!-- ЭКРАН: БУСТЫ -->
+    <section class="screen" id="screen-boosts" data-screen="boosts">
+      <h2 class="screen-title">Бусты</h2>
+      <p class="muted">Используй усиления, чтобы быстрее качать мир.</p>
+      <div id="boostsList" class="mission-list"></div>
+    </section>
+
+    <!-- ЭКРАН: РАНГ -->
+    <section class="screen" id="screen-rank" data-screen="rank">
+      <h2 class="screen-title">Ранг</h2>
+      <p class="muted">Пока примерный ранг по MetaWorlds.</p>
+      <div class="mission-list">
+        <div class="mission-card">
+          <div class="mission-title">Текущий дивизион</div>
+          <div class="mission-meta">
+            <span>Gold III</span>
+            <span>TOP <span id="rankTopSmall">1 284</span></span>
+          </div>
+          <div class="mission-desc">
+            Позже здесь будет полноценный лидерборд по игрокам.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+    <section class="screen" data-screen="create">
+  <div class="screen-inner">
+    <div class="screen-header">
+      <div class="screen-title">Создание мира</div>
+      <div class="screen-subtitle">Выбери архетип и дай название своей вселенной</div>
+    </div>
+
+    <div class="create-steps" aria-label="Памятка по созданию мира">
+      <div class="create-step">
+        <div class="create-step-number">1</div>
+        <div>
+          <div class="create-step-title">Определи архетип</div>
+          <div class="create-step-desc">
+            Нажми на карту, чтобы понять сильные и слабые стороны будущего мира.
+          </div>
+        </div>
+      </div>
+      <div class="create-step">
+        <div class="create-step-number">2</div>
+        <div>
+          <div class="create-step-title">Назови вселенную</div>
+          <div class="create-step-desc">
+            Придумай короткое имя — оно попадёт в статистику и список миров друзей.
+          </div>
+        </div>
+      </div>
+      <div class="create-step">
+        <div class="create-step-number">3</div>
+        <div>
+          <div class="create-step-title">Подтверди создание</div>
+          <div class="create-step-desc">
+            Нажми «Создать мир», чтобы разблокировать вкладки «Мир», «Бой» и миссии.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="archetype-grid">
+      <div class="archetype-card" data-arch="tech">
+        <div class="arch-icon">🛰️</div>
+        <div class="arch-title">Техномагия</div>
+        <div class="arch-desc">
+          Баланс в сторону технологий. Больше доход в час, меньше энергии.
+        </div>
+        <div class="arch-tags">
+          <span>+ Доход 💰</span>
+          <span>- Энергия ⚡</span>
+        </div>
+      </div>
+
+      <div class="archetype-card" data-arch="harmony">
+        <div class="arch-icon">🌌</div>
+        <div class="arch-title">Гармония</div>
+        <div class="arch-desc">
+          Сбалансированный мир. Чуть больше энергии и стабильный доход.
+        </div>
+        <div class="arch-tags">
+          <span>◎ Баланс ⚖️</span>
+        </div>
+      </div>
+
+      <div class="archetype-card" data-arch="chaos">
+        <div class="arch-icon">🔥</div>
+        <div class="arch-title">Хаос</div>
+        <div class="arch-desc">
+          Высокие риски и награды. Много энергии, но хаос растёт быстрее.
+        </div>
+        <div class="arch-tags">
+          <span>+ Энергия ⚡</span>
+          <span>+ Хаос 🧪</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="create-world-form">
+      <label class="input-label">Название мира</label>
+      <input
+        type="text"
+        id="worldNameInput"
+        class="input-text"
+        placeholder="Например, Небесный Град"
+        maxlength="24"
+      />
+
+      <button id="btnCreateWorld" class="primary-button">
+        Создать мир
+      </button>
+    </div>
+  </div>
+</section>
+
+
+  <!-- Нижнее меню -->
+  <nav class="tabbar">
+    <button class="tab-item" data-screen-target="home" data-tab="home">
+      <div class="tab-icon">🏠</div>
+      <div class="tab-label">Мир</div>
+    </button>
+    <button class="tab-item" data-screen-target="battle" data-tab="battle">
+      <div class="tab-icon">⚔️</div>
+      <div class="tab-label">Бой</div>
+    </button>
+    <button class="tab-item" data-screen-target="missions" data-tab="missions">
+      <div class="tab-icon">📜</div>
+      <div class="tab-label">Миссии</div>
+    </button>
+    <button class="tab-item" data-screen-target="boosts" data-tab="boosts">
+      <div class="tab-icon">🚀</div>
+      <div class="tab-label">Бусты</div>
+    </button>
+    <button class="tab-item" data-screen-target="rank" data-tab="rank">
+      <div class="tab-icon">🏆</div>
+      <div class="tab-label">Ранг</div>
+    </button>
+  </nav>
+</div>
+
+<script src="./main.js"></script>
+</body>
+</html>

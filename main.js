@@ -1,6 +1,7 @@
 window.addEventListener("load", () => {
-	const STORAGE_KEY = "metaworlds_state_v1";
-	const tg = window.Telegram?.WebApp;
+  const STORAGE_KEY = "metaworlds_state_v1";
+  const tg = window.Telegram?.WebApp;
+
   if (tg) {
     tg.expand();
     tg.ready();
@@ -125,6 +126,8 @@ window.addEventListener("load", () => {
 
   const hasCloudStorage = Boolean(tg?.CloudStorage);
 
+  // ========= DATA INSPECTOR =========
+
   let lastSyncedPayload = null;
 
   const inspectorEls = {
@@ -183,6 +186,7 @@ window.addEventListener("load", () => {
   async function readStoredStateSnapshot() {
     let raw = null;
     let source = null;
+
     if (hasCloudStorage) {
       try {
         raw = await cloudGetItem(STORAGE_KEY);
@@ -253,6 +257,8 @@ window.addEventListener("load", () => {
   updateInspectorLastSnapshot();
   updateInspectorStoredState(null);
 
+  // ========= СИНК С БОТОМ / CLOUDSTORAGE =========
+
   function serializeState() {
     return JSON.parse(JSON.stringify(worldState));
   }
@@ -279,6 +285,7 @@ window.addEventListener("load", () => {
     };
     lastSyncedPayload = payload;
     updateInspectorLastSnapshot();
+
     try {
       tg.sendData(JSON.stringify(payload));
     } catch (err) {
@@ -288,6 +295,7 @@ window.addEventListener("load", () => {
 
   let botSyncTimer = null;
   let pendingReason = null;
+
   function scheduleStatePush(reason = "auto") {
     if (!tg || !tg.sendData) return;
     pendingReason = reason;
@@ -337,6 +345,7 @@ window.addEventListener("load", () => {
     try {
       const data = JSON.stringify(worldState);
       saveToLocalStorage(data, reason);
+
       let storageLabel = "localStorage";
       if (hasCloudStorage) {
         try {
@@ -348,6 +357,7 @@ window.addEventListener("load", () => {
         }
       }
       updateInspectorStoredState(data, storageLabel);
+
       scheduleStatePush(reason || "save");
     } catch (e) {
       console.warn("Save error:", e);
@@ -378,7 +388,6 @@ window.addEventListener("load", () => {
       console.warn("Load error:", e);
     }
   }
-
 
   // ========= РЕНДЕР МИРА =========
   function applyArchetype(arch) {
@@ -456,7 +465,7 @@ window.addEventListener("load", () => {
     updateInspectorCurrentState();
   }
 
-    // ========= СОЗДАНИЕ МИРА =========
+  // ========= СОЗДАНИЕ МИРА =========
   const archCards = document.querySelectorAll(".archetype-card");
   const worldNameInput = document.getElementById("worldNameInput");
   const btnCreateWorld = document.getElementById("btnCreateWorld");
@@ -501,7 +510,6 @@ window.addEventListener("load", () => {
       showScreen("home");
     });
   }
-
 
   // ========= РОУТЕР ПО ЭКРАНАМ =========
 
@@ -791,7 +799,7 @@ window.addEventListener("load", () => {
 
   (async () => {
     await loadStateFromServer();
-    refreshInspectorStorage();
+    await refreshInspectorStorage();
     scheduleStatePush("boot");
 
     if (worldState.isCreated) {
@@ -805,5 +813,4 @@ window.addEventListener("load", () => {
       showScreen("create");
     }
   })();
-}); 
-
+});
