@@ -1,8 +1,18 @@
 require('dotenv').config();
 const { Telegraf } = require('telegraf');
+const db = require('./db');
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const WEBAPP_URL = process.env.WEBAPP_URL;
+
+// Подготовленный запрос для сохранения состояния мира
+const upsertWorldStmt = db.prepare(`
+  INSERT INTO worlds (user_id, state_json, updated_at)
+  VALUES (?, ?, datetime('now'))
+  ON CONFLICT(user_id) DO UPDATE SET
+    state_json = excluded.state_json,
+    updated_at = excluded.updated_at
+`);
 
 // /start с кнопкой mini app
 bot.start((ctx) => {
@@ -31,6 +41,15 @@ bot.on('web_app_data', (ctx) => {
 
     const user = ctx.from;
     const world = data.world || {};
+
+    // Сохраняем состояние мира в БД
+    try {
+      const stateJson = JSON.stringify(world);
+      upsertWorldStmt.run(String(user.id), stateJson);
+      console.log(`✅ Состояние сохранено в БД для пользователя ${user.id}`);
+    } catch (dbError) {
+      console.error('❌ Ошибка при сохранении в БД:', dbError);
+    }
 
     // Пример простого ответа (можно усложнить потом)
     let text = `📡 Обновление из MetaWorlds\n`;
