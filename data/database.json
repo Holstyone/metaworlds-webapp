@@ -1,0 +1,2412 @@
+{
+  "meta": {
+    "lastEventId": 33
+  },
+  "worlds": {
+    "local-debug": {
+      "userId": "local-debug",
+      "state": {
+        "name": "Magotech Grad",
+        "level": 7,
+        "xp": 1380,
+        "nextLevelXp": 2000,
+        "rankTop": 1284,
+        "energyNow": 825,
+        "energyMax": 1000,
+        "profitHour": 4320,
+        "chaos": 70,
+        "order": 30,
+        "coins": 493232,
+        "epoch": "II",
+        "dailyQuestsDone": 0,
+        "dailyQuestsTotal": 0,
+        "dailyBonus": "+12% к наградам",
+        "travelWorlds": 3,
+        "lastDailyDate": null,
+        "missions": [],
+        "boosts": [
+          {
+            "id": "b1",
+            "title": "Энергетический импульс",
+            "desc": "Мгновенно восстановить 25% энергии.",
+            "costCoins": 2000,
+            "effect": "energy",
+            "used": false
+          },
+          {
+            "id": "b2",
+            "title": "Финансовый резонанс",
+            "desc": "Временно увеличить прибыль в час на 20%.",
+            "costCoins": 3500,
+            "effect": "profit",
+            "used": false
+          }
+        ],
+        "archetype": null,
+        "isCreated": false,
+        "profile": {
+          "displayName": "Страж эпохи",
+          "motto": "Синхронизируйся с бесконечностью",
+          "avatarEmoji": "🧙‍♂️",
+          "timezone": "Europe/Moscow",
+          "reminderHour": "18:00",
+          "theme": "system",
+          "notifications": {
+            "energy": true,
+            "missions": true,
+            "battles": false
+          },
+          "privacy": {
+            "showRating": true,
+            "showArchetype": true,
+            "allowChallenges": true
+          }
+        }
+      },
+      "lastUpdate": 1763182192915,
+      "lastDailyDate": "2025-11-15",
+      "dailyMissions": [],
+      "dailyWorlds": 3,
+      "profitHour": 4320
+    }
+  },
+  "events": [
+    {
+      "id": 1,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1200,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 860,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 62,
+          "order": 38,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "boot"
+        },
+        "timestamp": "2025-11-15T04:46:37.402Z"
+      },
+      "createdAt": 1763181997406
+    },
+    {
+      "id": 2,
+      "userId": "local-debug",
+      "type": "match_found",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1200,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 860,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 62,
+          "order": 38,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "opponentId": "bot_zenith",
+          "rating": 1350,
+          "bot": true
+        },
+        "timestamp": "2025-11-15T04:46:51.824Z"
+      },
+      "createdAt": 1763182011825
+    },
+    {
+      "id": 3,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1200,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 865,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 62,
+          "order": 38,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:46:52.397Z"
+      },
+      "createdAt": 1763182012399
+    },
+    {
+      "id": 4,
+      "userId": "local-debug",
+      "type": "battle_finished",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1290,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 815,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 66,
+          "order": 34,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "win": false,
+          "leftHp": 89,
+          "rightHp": 97,
+          "opponentId": "bot_zenith",
+          "opponentCodename": "ZENITH"
+        },
+        "timestamp": "2025-11-15T04:47:02.618Z"
+      },
+      "createdAt": 1763182022621
+    },
+    {
+      "id": 5,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1290,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 815,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 66,
+          "order": 34,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "battle_finished"
+        },
+        "timestamp": "2025-11-15T04:47:02.979Z"
+      },
+      "createdAt": 1763182022981
+    },
+    {
+      "id": 6,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1290,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 820,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 66,
+          "order": 34,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:47:07.393Z"
+      },
+      "createdAt": 1763182027395
+    },
+    {
+      "id": 7,
+      "userId": "local-debug",
+      "type": "match_found",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1290,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 820,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 66,
+          "order": 34,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "opponentId": "bot_zenith",
+          "rating": 1350,
+          "bot": true
+        },
+        "timestamp": "2025-11-15T04:47:16.032Z"
+      },
+      "createdAt": 1763182036034
+    },
+    {
+      "id": 8,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1290,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 825,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 66,
+          "order": 34,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:47:22.406Z"
+      },
+      "createdAt": 1763182042407
+    },
+    {
+      "id": 9,
+      "userId": "local-debug",
+      "type": "battle_finished",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 775,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "win": false,
+          "leftHp": 71,
+          "rightHp": 73,
+          "opponentId": "bot_zenith",
+          "opponentCodename": "ZENITH"
+        },
+        "timestamp": "2025-11-15T04:47:30.943Z"
+      },
+      "createdAt": 1763182050945
+    },
+    {
+      "id": 10,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 775,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "battle_finished"
+        },
+        "timestamp": "2025-11-15T04:47:31.300Z"
+      },
+      "createdAt": 1763182051302
+    },
+    {
+      "id": 11,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 780,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:47:37.393Z"
+      },
+      "createdAt": 1763182057395
+    },
+    {
+      "id": 12,
+      "userId": "local-debug",
+      "type": "match_found",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 780,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "opponentId": "bot_nebula",
+          "rating": 1290,
+          "bot": true
+        },
+        "timestamp": "2025-11-15T04:47:42.020Z"
+      },
+      "createdAt": 1763182062023
+    },
+    {
+      "id": 13,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1,
+          "energyNow": 780,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493249,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": "2025-11-15",
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "boot"
+        },
+        "timestamp": "2025-11-15T04:47:51.726Z"
+      },
+      "createdAt": 1763182071729
+    },
+    {
+      "id": 14,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 785,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:47:53.913Z"
+      },
+      "createdAt": 1763182073915
+    },
+    {
+      "id": 15,
+      "userId": "local-debug",
+      "type": "match_found",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1,
+          "energyNow": 780,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493249,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": "2025-11-15",
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "opponentId": "bot_rogue",
+          "rating": 1210,
+          "bot": true
+        },
+        "timestamp": "2025-11-15T04:48:03.958Z"
+      },
+      "createdAt": 1763182083962
+    },
+    {
+      "id": 16,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1,
+          "energyNow": 785,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493249,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": "2025-11-15",
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:48:06.713Z"
+      },
+      "createdAt": 1763182086715
+    },
+    {
+      "id": 17,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 790,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:48:08.910Z"
+      },
+      "createdAt": 1763182088914
+    },
+    {
+      "id": 18,
+      "userId": "local-debug",
+      "type": "match_found",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 790,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "opponentId": "bot_zenith",
+          "rating": 1350,
+          "bot": true
+        },
+        "timestamp": "2025-11-15T04:48:12.642Z"
+      },
+      "createdAt": 1763182092644
+    },
+    {
+      "id": 19,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1,
+          "energyNow": 790,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493249,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": "2025-11-15",
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:48:22.910Z"
+      },
+      "createdAt": 1763182102916
+    },
+    {
+      "id": 20,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 795,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:48:23.785Z"
+      },
+      "createdAt": 1763182103825
+    },
+    {
+      "id": 21,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1,
+          "energyNow": 795,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493249,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": "2025-11-15",
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:48:37.907Z"
+      },
+      "createdAt": 1763182117914
+    },
+    {
+      "id": 22,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 800,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:48:38.907Z"
+      },
+      "createdAt": 1763182118910
+    },
+    {
+      "id": 23,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1,
+          "energyNow": 800,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493249,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": "2025-11-15",
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:48:52.901Z"
+      },
+      "createdAt": 1763182132906
+    },
+    {
+      "id": 24,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 805,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:48:53.913Z"
+      },
+      "createdAt": 1763182133917
+    },
+    {
+      "id": 25,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1,
+          "energyNow": 805,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493249,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": "2025-11-15",
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:49:07.903Z"
+      },
+      "createdAt": 1763182147906
+    },
+    {
+      "id": 26,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 810,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:49:08.910Z"
+      },
+      "createdAt": 1763182148913
+    },
+    {
+      "id": 27,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 815,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:49:23.906Z"
+      },
+      "createdAt": 1763182163908
+    },
+    {
+      "id": 28,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1,
+          "energyNow": 810,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493249,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": "2025-11-15",
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:49:28.910Z"
+      },
+      "createdAt": 1763182168913
+    },
+    {
+      "id": 29,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1,
+          "energyNow": 815,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493249,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": "2025-11-15",
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:49:38.698Z"
+      },
+      "createdAt": 1763182178700
+    },
+    {
+      "id": 30,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1,
+          "energyNow": 815,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493249,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": "2025-11-15",
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "unload"
+        },
+        "timestamp": "2025-11-15T04:49:46.897Z"
+      },
+      "createdAt": 1763182186901
+    },
+    {
+      "id": 31,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 820,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:49:47.274Z"
+      },
+      "createdAt": 1763182187278
+    },
+    {
+      "id": 32,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 825,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "passive_regen"
+        },
+        "timestamp": "2025-11-15T04:49:53.902Z"
+      },
+      "createdAt": 1763182193905
+    },
+    {
+      "id": 33,
+      "userId": "local-debug",
+      "type": "state_snapshot",
+      "payload": {
+        "state": {
+          "name": "Magotech Grad",
+          "level": 7,
+          "xp": 1380,
+          "nextLevelXp": 2000,
+          "rankTop": 1284,
+          "energyNow": 825,
+          "energyMax": 1000,
+          "profitHour": 4320,
+          "chaos": 70,
+          "order": 30,
+          "coins": 493232,
+          "epoch": "II",
+          "dailyQuestsDone": 0,
+          "dailyQuestsTotal": 0,
+          "dailyBonus": "+12% к наградам",
+          "travelWorlds": 3,
+          "lastDailyDate": null,
+          "missions": [],
+          "boosts": [
+            {
+              "id": "b1",
+              "title": "Энергетический импульс",
+              "desc": "Мгновенно восстановить 25% энергии.",
+              "costCoins": 2000,
+              "effect": "energy",
+              "used": false
+            },
+            {
+              "id": "b2",
+              "title": "Финансовый резонанс",
+              "desc": "Временно увеличить прибыль в час на 20%.",
+              "costCoins": 3500,
+              "effect": "profit",
+              "used": false
+            }
+          ],
+          "archetype": null,
+          "isCreated": false,
+          "profile": {
+            "displayName": "Страж эпохи",
+            "motto": "Синхронизируйся с бесконечностью",
+            "avatarEmoji": "🧙‍♂️",
+            "timezone": "Europe/Moscow",
+            "reminderHour": "18:00",
+            "theme": "system",
+            "notifications": {
+              "energy": true,
+              "missions": true,
+              "battles": false
+            },
+            "privacy": {
+              "showRating": true,
+              "showArchetype": true,
+              "allowChallenges": true
+            }
+          }
+        },
+        "extra": {
+          "reason": "unload"
+        },
+        "timestamp": "2025-11-15T04:49:59.463Z"
+      },
+      "createdAt": 1763182199466
+    }
+  ],
+  "rankings": {
+    "local-debug": {
+      "userId": "local-debug",
+      "rating": 1170,
+      "wins": 0,
+      "losses": 2,
+      "updatedAt": 1763182050945
+    }
+  }
+}
