@@ -123,6 +123,12 @@ window.addEventListener("load", () => {
     worldState.dailyQuestsTotal = worldState.missions.length;
   }
 
+  const hasCloudStorage = Boolean(tg?.CloudStorage);
+
+  function serializeState() {
+    return JSON.parse(JSON.stringify(worldState));
+  }
+
   function syncWithBot(eventType, extra) {
     if (!tg || !tg.sendData) return;
     const payload = {
@@ -139,16 +145,74 @@ window.addEventListener("load", () => {
         chaos: worldState.chaos,
         order: worldState.order,
       },
+      state: serializeState(),
       extra: extra || null,
+      timestamp: new Date().toISOString(),
     };
-    tg.sendData(JSON.stringify(payload));
+    try {
+      tg.sendData(JSON.stringify(payload));
+    } catch (err) {
+      console.warn("sendData failed", err);
+    }
+  }
+
+  let botSyncTimer = null;
+  let pendingReason = null;
+  function scheduleStatePush(reason = "auto") {
+    if (!tg || !tg.sendData) return;
+    pendingReason = reason;
+    if (botSyncTimer) return;
+    botSyncTimer = setTimeout(() => {
+      botSyncTimer = null;
+      const extra = { reason: pendingReason };
+      pendingReason = null;
+      syncWithBot("state_snapshot", extra);
+    }, 350);
+  }
+
+  function saveToLocalStorage(data, reason) {
+    localStorage.setItem(STORAGE_KEY, data);
+    console.log("Saved to localStorage:", reason);
+  }
+
+  function loadFromLocalStorage() {
+    return localStorage.getItem(STORAGE_KEY);
+  }
+
+  function cloudSetItem(key, value) {
+    return new Promise((resolve, reject) => {
+      tg.CloudStorage.setItem(key, value, (err, success) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(success);
+        }
+      });
+    });
+  }
+
+  function cloudGetItem(key) {
+    return new Promise((resolve, reject) => {
+      tg.CloudStorage.getItem(key, (err, value) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(value);
+        }
+      });
+    });
   }
 
   async function saveStateToServer(reason = "") {
     try {
       const data = JSON.stringify(worldState);
-      localStorage.setItem(STORAGE_KEY, data);
-      console.log("Saved to localStorage:", reason);
+      saveToLocalStorage(data, reason);
+
+      if (hasCloudStorage) {
+        await cloudSetItem(STORAGE_KEY, data);
+        console.log("Saved to Telegram CloudStorage:", reason);
+      }
+      scheduleStatePush(reason || "save");
     } catch (e) {
       console.warn("Save error:", e);
     }
@@ -156,12 +220,23 @@ window.addEventListener("load", () => {
 
   async function loadStateFromServer() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
+      let raw = null;
+
+      if (hasCloudStorage) {
+        raw = await cloudGetItem(STORAGE_KEY);
+        if (raw) {
+          console.log("Loaded from Telegram CloudStorage");
+        }
+      }
+
+      if (!raw) {
+        raw = loadFromLocalStorage();
+        if (!raw) return;
+        console.log("Loaded from localStorage");
+      }
+
       const data = JSON.parse(raw);
-      // Аккуратно переносим поля в текущий worldState
       Object.assign(worldState, data);
-      console.log("Loaded from localStorage");
     } catch (e) {
       console.warn("Load error:", e);
     }
@@ -560,13 +635,24 @@ window.addEventListener("load", () => {
         worldState.energyNow + 5
       );
       renderWorld();
+      saveStateToServer("passive_regen");
     }
   }, 15000);
+
+  window.addEventListener("beforeunload", () => {
+    if (!tg || !tg.sendData) return;
+    try {
+      syncWithBot("state_snapshot", { reason: "unload" });
+    } catch (err) {
+      console.warn("sendData before unload failed", err);
+    }
+  });
 
   // ========= СТАРТ =========
 
   (async () => {
     await loadStateFromServer();
+    scheduleStatePush("boot");
 
     if (worldState.isCreated) {
       generateDailyMissions();
