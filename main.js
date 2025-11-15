@@ -203,6 +203,39 @@ window.addEventListener("load", () => {
     });
   }
 
+  function saveToLocalStorage(data, reason) {
+    localStorage.setItem(STORAGE_KEY, data);
+    console.log("Saved to localStorage:", reason);
+  }
+
+  function loadFromLocalStorage() {
+    return localStorage.getItem(STORAGE_KEY);
+  }
+
+  function cloudSetItem(key, value) {
+    return new Promise((resolve, reject) => {
+      tg.CloudStorage.setItem(key, value, (err, success) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(success);
+        }
+      });
+    });
+  }
+
+  function cloudGetItem(key) {
+    return new Promise((resolve, reject) => {
+      tg.CloudStorage.getItem(key, (err, value) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(value);
+        }
+      });
+    });
+  }
+
   async function saveStateToServer(reason = "") {
     try {
       const data = JSON.stringify(worldState);
