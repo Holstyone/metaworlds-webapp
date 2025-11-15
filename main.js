@@ -1,20 +1,20 @@
 window.addEventListener("load", () => {
-  const STORAGE_KEY = "metaworlds_state_v1";
-  const tg = window.Telegram?.WebApp;
-  const API_BASE = "http://localhost:3001";
-  const playerId = tg?.initDataUnsafe?.user?.id
-    ? `tg_${tg.initDataUnsafe.user.id}`
-    : "local-debug";
-  let playerRanking = {
-    rating: 1200,
-    position: 0,
-    wins: 0,
-    losses: 0,
-  };
-  if (tg) {
-    tg.expand();
-    tg.ready();
-  }
+const STORAGE_KEY = "metaworlds_state_v1";
+const tg = window.Telegram?.WebApp;
+const API_BASE = "";
+const playerId = tg?.initDataUnsafe?.user?.id
+  ? `tg_${tg.initDataUnsafe.user.id}`
+  : "local-debug";
+let playerRanking = {
+  rating: 1200,
+  position: 0,
+  wins: 0,
+  losses: 0,
+};
+if (tg) {
+tg.expand();
+tg.ready();
+}
 
   // ========= СОСТОЯНИЕ МИРА =========
   const worldState = {
@@ -1023,43 +1023,25 @@ worldState.order = 100 - worldState.chaos;
 
   // ========= СТАРТ =========
 
-  async function postJson(url, body) {
-  const endpoint = url.startsWith("http") ? url : `${API_BASE}${url}`;
-  const resp = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!resp.ok) throw new Error(`Request failed with ${resp.status}`);
-  return resp.json();
+  (async () => {
+    await loadStateFromServer();
+    refreshInspectorStorage();
+    scheduleStatePush("boot");
+
+if (worldState.isCreated) {
+if (!worldState.missions || worldState.missions.length === 0) {
+generateDailyMissions();
 }
-//--//
-async function saveWorldState(reason = "") {
-  try {
-    const data = JSON.stringify(worldState);
-
-    saveToLocalStorage(data, reason);
-
-    if (hasCloudStorage) {
-      try {
-        await cloudSetItem(STORAGE_KEY, data);
-      } catch (err) {
-        console.warn("Cloud save failed:", err);
-      }
-    }
-
-    if (API_BASE) {
-      try {
-        await postJson("/api/world", {
-          userId: playerId,
-          state: serializeState(),
-          reason,
-          timestamp: Date.now(),
-        });
-      } catch (err) {
-        console.warn("Server save failed", err);
-      }
-    }
+renderWorld();
+renderMissions();
+renderBoosts();
+showScreen("home");
+} else {
+renderWorld();
+showScreen("create");
+}
+  })();
+}); 
 
     scheduleStatePush(reason || "save");
   } catch (err) {
