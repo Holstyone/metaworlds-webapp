@@ -1048,6 +1048,7 @@ rankRatingSmall.textContent = (playerRanking.rating || 1200).toLocaleString(
     });
   });
 
+
   if (btnCreateWorld) {
     btnCreateWorld.addEventListener("click", () => {
       const name = (worldNameInput?.value || "").trim();
@@ -1584,45 +1585,17 @@ worldState.order = 100 - worldState.chaos;
     refreshInspectorStorage();
     scheduleStatePush("boot");
 
-if (worldState.isCreated) {
-if (!worldState.missions || worldState.missions.length === 0) {
-generateDailyMissions();
-}
-renderWorld();
-renderMissions();
-renderBoosts();
-showScreen("home");
-} else {
-renderWorld();
-showScreen("create");
-}
-  })();
-}); 
-
-    scheduleStatePush(reason || "save");
-  } catch (err) {
-    console.warn("saveWorldState error", err);
-  }
-}
-
- //
-
-  (async () => {
-    await loadStateFromServer();
-    refreshInspectorStorage();
-    scheduleStatePush("boot");
-
-if (worldState.isCreated) {
-if (!worldState.missions || worldState.missions.length === 0) {
-generateDailyMissions();
-}
-renderWorld();
-renderMissions();
-renderBoosts();
-showScreen("home");
-} else {
-renderWorld();
-showScreen("create");
-}
+    if (worldState.isCreated) {
+      if (!worldState.missions || worldState.missions.length === 0) {
+        generateDailyMissions();
+      }
+      renderWorld();
+      renderMissions();
+      renderBoosts();
+      showScreen("home");
+    } else {
+      renderWorld();
+      showScreen("create");
+    }
   })();
 });
