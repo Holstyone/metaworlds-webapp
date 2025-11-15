@@ -415,6 +415,113 @@ body {
   word-break: break-word;
 }
 
+.changelog-card {
+  margin-top: 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(12, 12, 30, 0.9);
+  padding: 14px 16px 16px;
+  box-shadow: inset 0 0 0 1px rgba(14, 165, 233, 0.07);
+}
+
+.changelog-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.changelog-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.changelog-subtitle {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+.changelog-toggle {
+  border: 1px solid rgba(94, 234, 212, 0.45);
+  background: rgba(13, 148, 136, 0.18);
+  color: #99f6e4;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.changelog-panel {
+  margin-top: 12px;
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.changelog-card.changelog-open .changelog-panel {
+  display: flex;
+}
+
+.changelog-empty {
+  font-size: 11px;
+  opacity: 0.65;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.changelog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.changelog-entry {
+  border-radius: 16px;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  padding: 12px;
+  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), rgba(15, 23, 42, 0.8));
+}
+
+.changelog-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.changelog-version {
+  font-weight: 600;
+  color: #bfdbfe;
+}
+
+.changelog-date {
+  font-size: 10px;
+  color: #e2e8f0;
+}
+
+.changelog-entry-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.changelog-highlights {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.changelog-highlights li {
+  margin-bottom: 4px;
+}
+
 /* экран battle */
 
 .battle-header-row {

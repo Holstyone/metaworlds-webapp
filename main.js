@@ -94,6 +94,37 @@ window.addEventListener("load", () => {
     },
   ];
 
+  const releaseNotes = [
+    {
+      version: "0.9.0",
+      date: "18.03.2024",
+      title: "Серверная синхронизация и рейтинг",
+      highlights: [
+        "WebApp теперь грузит и сохраняет мир через Node.js API, который хранит ежедневные миссии и путешествия.",
+        "profit/hour продолжает работать офлайн: сервер копит монеты и возвращает их при следующем входе.",
+        "Рейтинг и позиция TOP подтягиваются прямо с сервера после боёв.",
+      ],
+    },
+    {
+      version: "0.8.6",
+      date: "16.03.2024",
+      title: "Мониторинг данных",
+      highlights: [
+        "На главном экране появилась панель инспектора с текущим состоянием, последним снапшотом и содержимым хранилищ.",
+        "Можно вручную обновить снимок и сразу увидеть, что именно отправляется боту.",
+      ],
+    },
+    {
+      version: "0.8.0",
+      date: "14.03.2024",
+      title: "Базовый цикл мира",
+      highlights: [
+        "Добавлены архетипы мира, генерация миссий дня и полноценный боевой экран.",
+        "Состояние сохраняется локально, в CloudStorage и синхронизируется с ботом через tg.sendData.",
+      ],
+    },
+  ];
+
   // ========= ВСПОМОГАТЕЛЬНОЕ =========
 
   function getTodayKey() {
@@ -133,42 +164,42 @@ window.addEventListener("load", () => {
     worldState.dailyQuestsTotal = worldState.missions.length;
   }
 
-  const hasCloudStorage = Boolean(tg?.CloudStorage);
+const hasCloudStorage = Boolean(tg?.CloudStorage);
 
-  function getPlayerId() {
-    return playerId;
-  }
+function getPlayerId() {
+return playerId;
+}
 
-  async function postJson(url, body) {
-    const endpoint = url.startsWith("http") ? url : `${API_BASE}${url}`;
-    const resp = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-      credentials: "same-origin",
-    });
-    if (!resp.ok) {
-      throw new Error(`Request failed with ${resp.status}`);
-    }
-    return resp.json();
-  }
+async function postJson(url, body) {
+const endpoint = url.startsWith("http") ? url : `${API_BASE}${url}`;
+const resp = await fetch(endpoint, {
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+},
+body: JSON.stringify(body),
+credentials: "same-origin",
+});
+if (!resp.ok) {
+throw new Error(`Request failed with ${resp.status}`);
+}
+return resp.json();
+}
 
-  let lastSyncedPayload = null;
+let lastSyncedPayload = null;
 
-  function updatePlayerRanking(ranking) {
-    if (!ranking) return;
-    playerRanking = {
-      rating: ranking.rating ?? playerRanking.rating,
-      position: ranking.position ?? playerRanking.position,
-      wins: ranking.wins ?? playerRanking.wins,
-      losses: ranking.losses ?? playerRanking.losses,
-    };
-    if (playerRanking.position) {
-      worldState.rankTop = playerRanking.position;
-    }
-  }
+function updatePlayerRanking(ranking) {
+if (!ranking) return;
+playerRanking = {
+rating: ranking.rating ?? playerRanking.rating,
+position: ranking.position ?? playerRanking.position,
+wins: ranking.wins ?? playerRanking.wins,
+losses: ranking.losses ?? playerRanking.losses,
+};
+if (playerRanking.position) {
+worldState.rankTop = playerRanking.position;
+}
+}
 
   const inspectorEls = {
     card: document.getElementById("dataInspectorCard"),
@@ -180,6 +211,15 @@ window.addEventListener("load", () => {
     stored: document.getElementById("inspectorStoredState"),
     source: document.getElementById("inspectorStorageSource"),
   };
+
+  const changelogEls = {
+    card: document.getElementById("changelogCard"),
+    toggle: document.getElementById("btnToggleChangelog"),
+    panel: document.getElementById("changelogPanel"),
+    list: document.getElementById("changelogList"),
+    empty: document.getElementById("changelogEmpty"),
+  };
+  let changelogExpanded = false;
 
   function formatJson(value) {
     try {
@@ -296,54 +336,127 @@ window.addEventListener("load", () => {
   updateInspectorLastSnapshot();
   updateInspectorStoredState(null);
 
+  function renderChangelog(entries) {
+    if (!changelogEls.list) return;
+    changelogEls.list.innerHTML = "";
+    if (!entries || !entries.length) {
+      if (changelogEls.empty) {
+        changelogEls.empty.style.display = "block";
+        changelogEls.empty.textContent = "Журнал пока пуст";
+      }
+      return;
+    }
+
+    if (changelogEls.empty) {
+      changelogEls.empty.style.display = "none";
+    }
+
+    entries.forEach((note) => {
+      const entry = document.createElement("article");
+      entry.className = "changelog-entry";
+
+      const meta = document.createElement("div");
+      meta.className = "changelog-meta";
+      const version = document.createElement("span");
+      version.className = "changelog-version";
+      version.textContent = note.version?.startsWith("v")
+        ? note.version
+        : `v${note.version}`;
+      const date = document.createElement("span");
+      date.className = "changelog-date";
+      date.textContent = note.date || "";
+      meta.appendChild(version);
+      meta.appendChild(date);
+
+      const title = document.createElement("div");
+      title.className = "changelog-entry-title";
+      title.textContent = note.title || "";
+
+      const list = document.createElement("ul");
+      list.className = "changelog-highlights";
+      (note.highlights || []).forEach((highlight) => {
+        const li = document.createElement("li");
+        li.textContent = highlight;
+        list.appendChild(li);
+      });
+
+      entry.appendChild(meta);
+      entry.appendChild(title);
+      entry.appendChild(list);
+      changelogEls.list.appendChild(entry);
+    });
+  }
+
+  function setChangelogExpanded(nextState) {
+    changelogExpanded = Boolean(nextState);
+    if (changelogEls.card) {
+      changelogEls.card.classList.toggle("changelog-open", changelogExpanded);
+    }
+    if (changelogEls.toggle) {
+      changelogEls.toggle.textContent = changelogExpanded ? "Свернуть" : "Показать";
+    }
+  }
+
+  function initChangelogControls() {
+    if (changelogEls.toggle) {
+      changelogEls.toggle.addEventListener("click", () => {
+        setChangelogExpanded(!changelogExpanded);
+      });
+    }
+    setChangelogExpanded(false);
+  }
+
+  renderChangelog(releaseNotes);
+  initChangelogControls();
+
   function serializeState() {
     return JSON.parse(JSON.stringify(worldState));
   }
 
-  function syncWithBot(eventType, extra) {
-    const payload = {
-      type: eventType,
-      world: {
-        name: worldState.name,
-        level: worldState.level,
-        xp: worldState.xp,
-        nextLevelXp: worldState.nextLevelXp,
-        rankTop: worldState.rankTop,
-        energyNow: worldState.energyNow,
-        energyMax: worldState.energyMax,
-        coins: worldState.coins,
-        chaos: worldState.chaos,
-        order: worldState.order,
-      },
-      state: serializeState(),
-      extra: extra || null,
-      timestamp: new Date().toISOString(),
-    };
-    lastSyncedPayload = payload;
-    updateInspectorLastSnapshot();
-    if (tg?.sendData) {
-      try {
-        tg.sendData(JSON.stringify(payload));
-      } catch (err) {
-        console.warn("sendData failed", err);
-      }
-    }
-    sendEventToServer(eventType, extra);
-  }
+function syncWithBot(eventType, extra) {
+const payload = {
+type: eventType,
+world: {
+name: worldState.name,
+level: worldState.level,
+xp: worldState.xp,
+nextLevelXp: worldState.nextLevelXp,
+rankTop: worldState.rankTop,
+energyNow: worldState.energyNow,
+energyMax: worldState.energyMax,
+coins: worldState.coins,
+chaos: worldState.chaos,
+order: worldState.order,
+},
+state: serializeState(),
+extra: extra || null,
+timestamp: new Date().toISOString(),
+};
+lastSyncedPayload = payload;
+updateInspectorLastSnapshot();
+if (tg?.sendData) {
+try {
+tg.sendData(JSON.stringify(payload));
+} catch (err) {
+console.warn("sendData failed", err);
+}
+}
+sendEventToServer(eventType, extra);
+}
 
-  function sendEventToServer(eventType, extra) {
-    const userId = getPlayerId();
-    if (!userId) return;
-    postJson("/api/events", {
-      userId,
-      type: eventType,
-      state: serializeState(),
-      extra: extra || null,
-      timestamp: new Date().toISOString(),
-    }).catch((err) => {
-      console.warn("Server event sync failed", err);
-    });
-  }
+function sendEventToServer(eventType, extra) {
+const userId = getPlayerId();
+if (!userId) return;
+postJson("/api/events", {
+userId,
+type: eventType,
+state: serializeState(),
+extra: extra || null,
+timestamp: new Date().toISOString(),
+}).catch((err) => {
+console.warn("Server event sync failed", err);
+});
+}
 
   let botSyncTimer = null;
   let pendingReason = null;
@@ -392,90 +505,91 @@ window.addEventListener("load", () => {
     });
   }
 
-  async function saveWorldState(reason = "") {
-    try {
-      const data = JSON.stringify(worldState);
-      saveToLocalStorage(data, reason);
-      let storageLabel = "localStorage";
-      if (hasCloudStorage) {
-        try {
-          await cloudSetItem(STORAGE_KEY, data);
-          storageLabel = "Telegram CloudStorage + localStorage";
-          console.log("Saved to Telegram CloudStorage:", reason);
-        } catch (err) {
-          console.warn("CloudStorage save failed", err);
-        }
-      }
-      updateInspectorStoredState(data, storageLabel);
-      const userId = getPlayerId();
-      if (userId) {
-        postJson("/api/world", {
-          userId,
-          state: serializeState(),
-          reason: reason || null,
-          timestamp: Date.now(),
-        }).catch((err) => {
-          console.warn("Server save failed", err);
-        });
-      }
-      scheduleStatePush(reason || "save");
-    } catch (e) {
-      console.warn("Save error:", e);
-    }
-  }
+async function saveWorldState(reason = "") {
+try {
+const data = JSON.stringify(worldState);
+saveToLocalStorage(data, reason);
+let storageLabel = "localStorage";
+if (hasCloudStorage) {
+try {
+await cloudSetItem(STORAGE_KEY, data);
+storageLabel = "Telegram CloudStorage + localStorage";
+console.log("Saved to Telegram CloudStorage:", reason);
+} catch (err) {
+console.warn("CloudStorage save failed", err);
+}
+}
+updateInspectorStoredState(data, storageLabel);
+const userId = getPlayerId();
+if (userId) {
+postJson("/api/world", {
+userId,
+state: serializeState(),
+reason: reason || null,
+timestamp: Date.now(),
+}).catch((err) => {
+console.warn("Server save failed", err);
+});
+}
+scheduleStatePush(reason || "save");
+} catch (e) {
+console.warn("Save error:", e);
+}
+}
 
-  async function loadStateFromServer() {
-    let loadedFromServer = false;
-    const userId = getPlayerId();
-    if (userId) {
-      try {
-        const resp = await fetch(
-          `/api/world?userId=${encodeURIComponent(userId)}`,
-          { credentials: "same-origin" }
-        );
-        if (resp.ok) {
-          const payload = await resp.json();
-          if (payload?.state) {
-            Object.assign(worldState, payload.state);
-            updatePlayerRanking(payload.ranking);
-            loadedFromServer = true;
-          }
-        }
-      } catch (err) {
-        console.warn("Server load failed", err);
-      }
-    }
+async function loadStateFromServer() {
+let loadedFromServer = false;
+const userId = getPlayerId();
+if (userId) {
+try {
+const resp = await fetch(
+`/api/world?userId=${encodeURIComponent(userId)}`,
+{ credentials: "same-origin" }
+);
+if (resp.ok) {
+const payload = await resp.json();
+if (payload?.state) {
+Object.assign(worldState, payload.state);
+updatePlayerRanking(payload.ranking);
+loadedFromServer = true;
+}
+}
+} catch (err) {
+console.warn("Server load failed", err);
+}
+}
 
-    if (!loadedFromServer) {
-      try {
-        let raw = null;
-        if (hasCloudStorage) {
-          raw = await cloudGetItem(STORAGE_KEY);
-          if (raw) {
-            console.log("Loaded from Telegram CloudStorage");
-          }
-        }
-        if (!raw) {
-          raw = loadFromLocalStorage();
-          if (raw) {
-            console.log("Loaded from localStorage");
-          }
-        }
-        if (raw) {
-          const data = JSON.parse(raw);
-          Object.assign(worldState, data);
-          loadedFromServer = true;
-        }
-      } catch (err) {
-        console.warn("Load error:", err);
-      }
-    }
+if (!loadedFromServer) {
+try {
+let raw = null;
+if (hasCloudStorage) {
+raw = await cloudGetItem(STORAGE_KEY);
+if (raw) {
+console.log("Loaded from Telegram CloudStorage");
+}
+}
+if (!raw) {
+raw = loadFromLocalStorage();
+if (raw) {
+console.log("Loaded from localStorage");
+}
+}
+if (raw) {
+const data = JSON.parse(raw);
+Object.assign(worldState, data);
+loadedFromServer = true;
+}
+} catch (err) {
+console.warn("Load error:", err);
+}
+}
 
-    if (loadedFromServer) {
-      updateInspectorCurrentState();
-    }
-    return loadedFromServer;
-  }
+if (loadedFromServer) {
+updateInspectorCurrentState();
+}
+return loadedFromServer;
+}
+
 
   // ========= РЕНДЕР МИРА =========
   function applyArchetype(arch) {
@@ -514,20 +628,20 @@ window.addEventListener("load", () => {
 
     byId("heroName").textContent = worldState.name;
     byId("heroLevel").textContent = worldState.level;
-    const heroTopEl = byId("heroTop");
-    const heroRatingEl = document.getElementById("heroRating");
-    const currentTop =
-      playerRanking.position || worldState.rankTop || 0;
-    if (heroTopEl) {
-      heroTopEl.textContent = currentTop
-        ? Number(currentTop).toLocaleString("ru-RU")
-        : "—";
-    }
-    if (heroRatingEl) {
-      heroRatingEl.textContent = (playerRanking.rating || 1200).toLocaleString(
-        "ru-RU"
-      );
-    }
+const heroTopEl = byId("heroTop");
+const heroRatingEl = document.getElementById("heroRating");
+const currentTop =
+playerRanking.position || worldState.rankTop || 0;
+if (heroTopEl) {
+heroTopEl.textContent = currentTop
+? Number(currentTop).toLocaleString("ru-RU")
+: "—";
+}
+if (heroRatingEl) {
+heroRatingEl.textContent = (playerRanking.rating || 1200).toLocaleString(
+"ru-RU"
+);
+}
 
     byId("xpNow").textContent = worldState.xp;
     byId("xpNext").textContent = worldState.nextLevelXp;
@@ -558,16 +672,16 @@ window.addEventListener("load", () => {
     const percent = (worldState.energyNow / worldState.energyMax) * 100;
     energyBar.style.width = Math.max(5, Math.min(100, percent)) + "%";
 
-    const rankTopSmall = document.getElementById("rankTopSmall");
-    if (rankTopSmall) {
-      rankTopSmall.textContent = heroTopEl?.textContent || "—";
-    }
-    const rankRatingSmall = document.getElementById("rankRatingSmall");
-    if (rankRatingSmall) {
-      rankRatingSmall.textContent = (
-        playerRanking.rating || 1200
-      ).toLocaleString("ru-RU");
-    }
+const rankTopSmall = document.getElementById("rankTopSmall");
+if (rankTopSmall) {
+rankTopSmall.textContent = heroTopEl?.textContent || "—";
+}
+const rankRatingSmall = document.getElementById("rankRatingSmall");
+if (rankRatingSmall) {
+rankRatingSmall.textContent = (playerRanking.rating || 1200).toLocaleString(
+"ru-RU"
+);
+}
 
     updateInspectorCurrentState();
   }
@@ -722,13 +836,13 @@ window.addEventListener("load", () => {
     gainXp(mission.rewardXp);
     mission.done = true;
 
-    worldState.dailyQuestsDone = worldState.missions.filter(
-      (m) => m.done
-    ).length;
-    worldState.travelWorlds = (worldState.travelWorlds || 0) + 1;
+worldState.dailyQuestsDone = worldState.missions.filter(
+(m) => m.done
+).length;
+worldState.travelWorlds = (worldState.travelWorlds || 0) + 1;
 
-    worldState.chaos = Math.max(0, worldState.chaos - 2);
-    worldState.order = 100 - worldState.chaos;
+worldState.chaos = Math.max(0, worldState.chaos - 2);
+worldState.order = 100 - worldState.chaos;
 
     renderWorld();
     renderMissions();
@@ -922,20 +1036,20 @@ window.addEventListener("load", () => {
 
   (async () => {
     await loadStateFromServer();
-    await refreshInspectorStorage();
+    refreshInspectorStorage();
     scheduleStatePush("boot");
 
-    if (worldState.isCreated) {
-      if (!worldState.missions || worldState.missions.length === 0) {
-        generateDailyMissions();
-      }
-      renderWorld();
-      renderMissions();
-      renderBoosts();
-      showScreen("home");
-    } else {
-      renderWorld();
-      showScreen("create");
-    }
+if (worldState.isCreated) {
+if (!worldState.missions || worldState.missions.length === 0) {
+generateDailyMissions();
+}
+renderWorld();
+renderMissions();
+renderBoosts();
+showScreen("home");
+} else {
+renderWorld();
+showScreen("create");
+}
   })();
 });
